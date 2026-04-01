@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Agency, AuditLog, Notification, NotificationPreference, User
+from .models import Agency, AuditLog, CalendarEvent, Notification, NotificationPreference, User
 
 
 @admin.register(User)
@@ -47,3 +47,11 @@ class NotificationAdmin(admin.ModelAdmin):
 class NotificationPreferenceAdmin(admin.ModelAdmin):
     list_display = ('user', 'notification_type', 'channel_in_app', 'channel_email', 'is_muted')
     list_filter = ('notification_type', 'is_muted')
+
+
+@admin.register(CalendarEvent)
+class CalendarEventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'event_type', 'provider', 'status', 'start_time', 'last_synced_at')
+    list_filter = ('provider', 'status', 'event_type')
+    search_fields = ('title', 'external_id')
+    readonly_fields = ('id', 'external_id', 'status', 'sync_error', 'last_synced_at', 'created_at', 'updated_at')

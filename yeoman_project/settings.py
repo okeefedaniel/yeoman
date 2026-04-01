@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'keel.core',
     'keel.security',
     'keel.notifications',
+    'keel.calendar',
     # Third party
     'rest_framework',
     'crispy_forms',
@@ -276,12 +277,13 @@ KEEL_NOTIFICATION_PREFERENCE_MODEL = 'core.NotificationPreference'
 KEEL_NOTIFICATION_LOG_MODEL = 'core.NotificationLog'
 KEEL_CSP_POLICY = {}
 
+# Calendar sync (keel.calendar)
+KEEL_CALENDAR_PROVIDER = os.environ.get('KEEL_CALENDAR_PROVIDER', None)  # 'google' or 'microsoft'
+KEEL_CALENDAR_EVENT_MODEL = 'core.CalendarEvent'
+KEEL_CALENDAR_SYNC_LOG_MODEL = 'core.CalendarSyncLog'
+
 # Yeoman-specific
 GOOGLE_GEOCODING_API_KEY = os.environ.get('GOOGLE_GEOCODING_API_KEY', '')
-YEOMAN_CALENDAR_BACKEND = os.environ.get(
-    'YEOMAN_CALENDAR_BACKEND',
-    'yeoman.services.calendar_push.GoogleCalendarBackend',
-)
 
 # Site
 SITE_NAME = 'Yeoman'
