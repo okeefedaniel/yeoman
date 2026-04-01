@@ -1,1 +1,1 @@
-web: gunicorn yeoman_project.wsgi --log-file -
+web: python startup.py

@@ -1,9 +1,10 @@
+import logging
+
 from django.utils import timezone
 
-from keel.collaboration.services import add_comment
-from keel.notifications.dispatch import notify
-
 from yeoman.models import DelegationLog
+
+logger = logging.getLogger(__name__)
 
 
 def delegate_invitation(invitation, delegated_by, delegated_to, notes=''):
@@ -23,19 +24,8 @@ def delegate_invitation(invitation, delegated_by, delegated_to, notes=''):
 
     invitation.transition('delegate', user=delegated_by)
 
-    add_comment(
-        invitation,
-        delegated_by,
-        f"Delegated to @{delegated_to.username}. {notes}".strip(),
-    )
-
-    notify(
-        recipient=delegated_to,
-        template_slug='yeoman_delegated_to_you',
-        context={
-            'invitation': str(invitation),
-            'delegated_by': str(delegated_by),
-            'notes': notes,
-        },
-        channels=['email', 'in_app'],
+    # TODO: integrate with keel.notifications.dispatch when ready
+    logger.info(
+        "Invitation %s delegated from %s to %s",
+        invitation.pk, delegated_by, delegated_to,
     )

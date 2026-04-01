@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class YeomanConfig(AppConfig):
+class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'yeoman'
-    verbose_name = 'Yeoman'
+    name = 'core'
+    verbose_name = 'Yeoman Core'

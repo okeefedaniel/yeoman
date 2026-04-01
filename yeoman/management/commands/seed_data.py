@@ -7,67 +7,58 @@ from datetime import date, time, timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
-from keel.auth.models import Role, RoleAssignment, User
-from keel.orgs.models import Organization
+from core.models import Agency, User
 from yeoman.models import Invitation, InvitationTag
-from yeoman.roles import ensure_roles
 
 
 class Command(BaseCommand):
-    help = 'Seed Yeoman with demo organization, users, tags, and sample invitations.'
+    help = 'Seed Yeoman with demo agency, users, tags, and sample invitations.'
 
     def handle(self, *args, **options):
         self.stdout.write("Seeding Yeoman data...\n")
 
-        # 1. Organization
-        org, created = Organization.objects.get_or_create(
-            slug='decd',
+        # 1. Agency
+        agency, created = Agency.objects.get_or_create(
+            abbreviation='DECD',
             defaults={'name': 'CT Department of Economic and Community Development'},
         )
-        self.stdout.write(f"  Org: {org.name} ({'created' if created else 'exists'})")
+        self.stdout.write(f"  Agency: {agency.name} ({'created' if created else 'exists'})")
 
-        # 2. Roles
-        ensure_roles()
-        self.stdout.write("  Roles: created/verified")
-
-        # 3. Users (one per role)
+        # 2. Users (one per role)
         users = {}
         user_defs = [
-            ('dokeefe', 'Dan', "O'Keefe", 'yeoman_admin'),
-            ('jscheduler', 'Jane', 'Scheduler', 'yeoman_scheduler'),
-            ('bviewer', 'Bob', 'Viewer', 'yeoman_viewer'),
-            ('ddelegate', 'Diana', 'Delegate', 'yeoman_delegate'),
+            ('dokeefe', 'Dan', "O'Keefe", User.Role.ADMIN),
+            ('jscheduler', 'Jane', 'Scheduler', User.Role.SCHEDULER),
+            ('bviewer', 'Bob', 'Viewer', User.Role.VIEWER),
+            ('ddelegate', 'Diana', 'Delegate', User.Role.DELEGATE),
         ]
-        for username, first, last, role_name in user_defs:
+        for username, first, last, role in user_defs:
             user, created = User.objects.get_or_create(
                 username=username,
                 defaults={
                     'first_name': first,
                     'last_name': last,
                     'email': f'{username}@decd.ct.gov',
-                    'org': org,
-                    'is_staff': role_name in ('yeoman_admin', 'yeoman_scheduler'),
+                    'role': role,
+                    'is_staff': role in (User.Role.ADMIN, User.Role.SCHEDULER),
                 },
             )
             if created:
                 user.set_password('yeoman2026')
                 user.save()
 
-            role = Role.objects.get(name=role_name)
-            RoleAssignment.objects.get_or_create(user=user, role=role, org=org)
-            users[role_name] = user
-            self.stdout.write(f"  User: {user} ({role_name}) ({'created' if created else 'exists'})")
+            users[role] = user
+            self.stdout.write(f"  User: {user} ({role}) ({'created' if created else 'exists'})")
 
         # Make admin a superuser for Django admin access
-        admin_user = users['yeoman_admin']
+        admin_user = users[User.Role.ADMIN]
         if not admin_user.is_superuser:
             admin_user.is_superuser = True
             admin_user.is_staff = True
             admin_user.save()
 
-        # 4. Tags
+        # 3. Tags
         tag_defs = [
             ('Legislative', 'legislative', '#0d6efd'),
             ('Economic Development', 'economic-dev', '#198754'),
@@ -81,13 +72,13 @@ class Command(BaseCommand):
         tags = {}
         for name, slug, color in tag_defs:
             tag, _ = InvitationTag.objects.get_or_create(
-                org=org, slug=slug,
+                agency=agency, slug=slug,
                 defaults={'name': name, 'color': color},
             )
             tags[slug] = tag
         self.stdout.write(f"  Tags: {len(tags)} created/verified")
 
-        # 5. Sample Invitations (20 across all statuses)
+        # 4. Sample Invitations (20 across all statuses)
         today = date.today()
         ct_locations = [
             ('Connecticut Convention Center', '100 Columbus Blvd', 'Hartford', 'CT', '06103', Decimal('41.7627'), Decimal('-72.6700')),
@@ -135,7 +126,7 @@ class Command(BaseCommand):
             'Ribbon Cutting: New Manufacturing Lab',
             'Annual Economic Development Conference',
             'Small Business Roundtable',
-            'Governor\'s STEM Education Panel',
+            "Governor's STEM Education Panel",
             'Aerospace Industry Tour',
             'Healthcare Innovation Forum',
             'Housing Affordability Town Hall',
@@ -154,7 +145,7 @@ class Command(BaseCommand):
         ]
 
         tag_keys = list(tags.keys())
-        existing = Invitation.objects.filter(org=org).count()
+        existing = Invitation.objects.filter(agency=agency).count()
         if existing >= 20:
             self.stdout.write(f"  Invitations: {existing} already exist, skipping seed")
         else:
@@ -165,7 +156,7 @@ class Command(BaseCommand):
                 event_date = today + timedelta(days=random.randint(-30, 90))
 
                 inv = Invitation.objects.create(
-                    org=org,
+                    agency=agency,
                     submitter_name=sub[0],
                     submitter_email=sub[1],
                     submitter_organization=sub[2],
@@ -188,9 +179,9 @@ class Command(BaseCommand):
                     virtual_link='https://zoom.us/j/1234567890' if modality in ('virtual', 'hybrid') else '',
                     priority=random.choice(priorities),
                     status=status,
-                    assigned_to=users['yeoman_scheduler'] if status != 'received' else None,
-                    delegated_to=users['yeoman_delegate'] if status == 'delegated' else None,
-                    delegated_by=users['yeoman_admin'] if status == 'delegated' else None,
+                    assigned_to=users[User.Role.SCHEDULER] if status != 'received' else None,
+                    delegated_to=users[User.Role.DELEGATE] if status == 'delegated' else None,
+                    delegated_by=users[User.Role.ADMIN] if status == 'delegated' else None,
                     created_by=None,
                 )
 

@@ -6,7 +6,7 @@ from .models import DelegationLog, Invitation, InvitationAttachment, InvitationT
 class InvitationAttachmentInline(admin.TabularInline):
     model = InvitationAttachment
     extra = 0
-    readonly_fields = ('document', 'uploaded_by_staff', 'created_at')
+    readonly_fields = ('original_filename', 'uploaded_by_staff', 'created_at')
 
 
 class DelegationLogInline(admin.TabularInline):
@@ -24,7 +24,7 @@ class InvitationAdmin(admin.ModelAdmin):
         'event_name', 'event_date', 'event_format', 'status',
         'priority', 'submitter_name', 'assigned_to', 'created_at',
     )
-    list_filter = ('status', 'event_format', 'modality', 'priority', 'org')
+    list_filter = ('status', 'event_format', 'modality', 'priority', 'agency')
     search_fields = (
         'event_name', 'submitter_name', 'submitter_email',
         'submitter_organization', 'venue_name',
@@ -38,7 +38,7 @@ class InvitationAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Event', {
             'fields': (
-                'id', 'org', 'event_name', 'event_description',
+                'id', 'agency', 'event_name', 'event_description',
                 'event_date', 'event_time_start', 'event_time_end',
                 'event_timezone', 'event_format', 'event_format_other',
                 'modality',
@@ -83,14 +83,14 @@ class InvitationAdmin(admin.ModelAdmin):
 
 @admin.register(InvitationTag)
 class InvitationTagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'org', 'color')
-    list_filter = ('org',)
+    list_display = ('name', 'slug', 'agency', 'color')
+    list_filter = ('agency',)
     prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(InvitationAttachment)
 class InvitationAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('document', 'invitation', 'uploaded_by_staff', 'created_at')
+    list_display = ('original_filename', 'invitation', 'uploaded_by_staff', 'created_at')
     list_filter = ('uploaded_by_staff',)
 
 

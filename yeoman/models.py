@@ -3,40 +3,40 @@ import uuid
 from django.conf import settings
 from django.db import models
 
-from keel.audit.mixins import AuditableMixin
-from keel.orgs.models import Organization
-from keel.workflow.mixins import WorkflowMixin
+from keel.core.models import KeelBaseModel
 
 
 class InvitationTag(models.Model):
     """Flexible tagging for invitations. Examples: 'legislative', 'economic-dev', 'education'."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name='invitation_tags',
+    agency = models.ForeignKey(
+        'core.Agency', on_delete=models.CASCADE, related_name='invitation_tags',
     )
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100)
     color = models.CharField(max_length=7, default='#6c757d')
 
     class Meta:
-        unique_together = ('org', 'slug')
+        unique_together = ('agency', 'slug')
         ordering = ['name']
 
     def __str__(self):
         return self.name
 
 
-class Invitation(AuditableMixin, WorkflowMixin, models.Model):
+class Invitation(KeelBaseModel):
     """
     The core record. Represents a request for the principal's time.
     Created either via the public intake form or manually by staff.
     """
     WORKFLOW_NAME = 'yeoman_invitation'
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    org = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name='invitations',
+    agency = models.ForeignKey(
+        'core.Agency', on_delete=models.CASCADE, related_name='invitations',
     )
+
+    # === Status (workflow) ===
+    status = models.CharField(max_length=50, default='received', db_index=True)
 
     # === Submitter Info ===
     submitter_name = models.CharField(max_length=255)
@@ -131,18 +131,10 @@ class Invitation(AuditableMixin, WorkflowMixin, models.Model):
     # === Submitter Status Token ===
     status_token = models.UUIDField(default=uuid.uuid4, editable=False)
 
-    # === Meta ===
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True,
-        on_delete=models.SET_NULL, related_name='created_invitations',
-    )
-
     class Meta:
         ordering = ['-event_date', '-created_at']
         indexes = [
-            models.Index(fields=['org', 'status']),
+            models.Index(fields=['agency', 'status']),
             models.Index(fields=['event_date']),
             models.Index(fields=['assigned_to', 'status']),
             models.Index(fields=['delegated_to']),
@@ -161,6 +153,64 @@ class Invitation(AuditableMixin, WorkflowMixin, models.Model):
     def has_location(self):
         return self.latitude is not None and self.longitude is not None
 
+    def get_workflow(self):
+        from yeoman.workflow import YEOMAN_INVITATION_WORKFLOW
+        return YEOMAN_INVITATION_WORKFLOW
+
+    def get_available_transitions(self, user=None):
+        """Return transitions available from the current state, optionally filtered by user role."""
+        workflow = self.get_workflow()
+        if not workflow:
+            return []
+
+        available = []
+        for t in workflow.get('transitions', []):
+            from_states = t['from'] if isinstance(t['from'], list) else [t['from']]
+            if self.status not in from_states:
+                continue
+
+            if user and t.get('roles'):
+                user_roles = user.get_roles(org=getattr(self, 'agency', None))
+                if not any(r in user_roles for r in t['roles']):
+                    continue
+
+            available.append(t)
+        return available
+
+    def transition(self, transition_name, user=None):
+        """Execute a named transition. Validates state and roles."""
+        workflow = self.get_workflow()
+        if not workflow:
+            raise ValueError(f"No workflow registered: {self.WORKFLOW_NAME}")
+
+        transition = None
+        for t in workflow.get('transitions', []):
+            if t['name'] == transition_name:
+                transition = t
+                break
+
+        if not transition:
+            raise ValueError(f"Unknown transition: {transition_name}")
+
+        from_states = transition['from'] if isinstance(transition['from'], list) else [transition['from']]
+        if self.status not in from_states:
+            raise ValueError(
+                f"Cannot transition '{transition_name}' from state '{self.status}'. "
+                f"Allowed from: {from_states}"
+            )
+
+        if user and transition.get('roles'):
+            user_roles = user.get_roles(org=getattr(self, 'agency', None))
+            if not any(r in user_roles for r in transition['roles']):
+                raise PermissionError(
+                    f"User {user} lacks required role for '{transition_name}'. "
+                    f"Required: {transition['roles']}"
+                )
+
+        self.status = transition['to']
+        self.save(update_fields=['status'])
+        return self
+
     def save(self, **kwargs):
         # Geocode on save if address present but no coordinates
         if self.venue_address and not (self.latitude and self.longitude):
@@ -169,14 +219,19 @@ class Invitation(AuditableMixin, WorkflowMixin, models.Model):
         super().save(**kwargs)
 
 
-class InvitationAttachment(AuditableMixin, models.Model):
-    """File attachments on an invitation. Uses keel.documents for storage."""
+class InvitationAttachment(models.Model):
+    """File attachments on an invitation."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     invitation = models.ForeignKey(
         Invitation, on_delete=models.CASCADE, related_name='attachments',
     )
-    document = models.ForeignKey(
-        'keel_documents.Document', on_delete=models.CASCADE,
+    file = models.FileField(upload_to='invitation_attachments/%Y/%m/')
+    original_filename = models.CharField(max_length=500)
+    content_type = models.CharField(max_length=100, blank=True)
+    size_bytes = models.PositiveIntegerField(default=0)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL,
     )
     uploaded_by_staff = models.BooleanField(
         default=False,
@@ -189,11 +244,11 @@ class InvitationAttachment(AuditableMixin, models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.document.original_filename} on {self.invitation}"
+        return f"{self.original_filename} on {self.invitation}"
 
 
-class DelegationLog(AuditableMixin, models.Model):
-    """Tracks the full delegation history of an invitation."""
+class DelegationLog(models.Model):
+    """Tracks the full delegation history of an invitation. Immutable."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     invitation = models.ForeignKey(
         Invitation, on_delete=models.CASCADE, related_name='delegation_history',
@@ -213,4 +268,4 @@ class DelegationLog(AuditableMixin, models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.delegated_by} → {self.delegated_to} on {self.invitation}"
+        return f"{self.delegated_by} -> {self.delegated_to} on {self.invitation}"

@@ -1,20 +1,41 @@
+"""
+Yeoman - Scheduling & Invitation Workflow
+Django settings
+"""
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
-import environ
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ['localhost', '127.0.0.1']),
-)
-environ.Env.read_env(BASE_DIR / '.env')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-SECRET_KEY = env('SECRET_KEY', default='dev-insecure-key-change-in-production')
-DEBUG = env('DEBUG')
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-dev-key-change-in-production'
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set in production')
 
+DEMO_MODE = os.environ.get('DEMO_MODE', 'False').lower() in ('true', '1', 'yes')
+DEMO_ROLES = ['yeoman_admin', 'yeoman_scheduler', 'yeoman_viewer', 'yeoman_delegate']
+
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+RAILWAY_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if RAILWAY_DOMAIN:
+    ALLOWED_HOSTS.append(RAILWAY_DOMAIN)
+    ALLOWED_HOSTS.append('.railway.app')
+
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+if RAILWAY_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_DOMAIN}')
+CSRF_TRUSTED_ORIGINS = [o for o in CSRF_TRUSTED_ORIGINS if o]
+
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -22,26 +43,41 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Keel modules (stubs for now — swap for real keel when available)
-    'keel.auth',
-    'keel.orgs',
-    'keel.audit',
-    'keel.workflow',
+    'django.contrib.humanize',
+    'django.contrib.sites',
+    # Keel (DockLabs shared platform)
+    'keel.core',
+    'keel.security',
     'keel.notifications',
-    'keel.documents',
-    'keel.collaboration',
-    # Yeoman
-    'yeoman',
+    # Third party
+    'rest_framework',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'django_filters',
+    # Allauth (SSO / MFA)
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.microsoft',
+    'allauth.mfa',
+    # Project apps
+    'core.apps.CoreConfig',
+    'yeoman.apps.YeomanConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'keel.security.middleware.SecurityHeadersMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+    'keel.core.middleware.AuditMiddleware',
+    'keel.security.middleware.FailedLoginMonitor',
 ]
 
 ROOT_URLCONF = 'yeoman_project.urls'
@@ -49,14 +85,14 @@ ROOT_URLCONF = 'yeoman_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'keel.core.context_processors.site_context',
             ],
         },
     },
@@ -65,68 +101,187 @@ TEMPLATES = [
 WSGI_APPLICATION = 'yeoman_project.wsgi.application'
 
 # Database
-db_url = env('DATABASE_URL', default='')
-if db_url:
-    DATABASES = {
-        'default': env.db(),
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+import dj_database_url
 
-AUTH_USER_MODEL = 'keel_auth.User'
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600,
+    )
+}
+
+AUTH_USER_MODEL = 'core.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 10}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 TIME_ZONE = 'America/New_York'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+# Static files
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Crispy forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+# Login/Logout
+LOGIN_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+
+# Email — Railway blocks outbound SMTP, so use Resend for automated emails
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.migadu.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'info@docklabs.ai')
+
+# Resend (HTTP API for automated/transactional emails)
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email
-EMAIL_HOST = env('EMAIL_HOST', default='localhost')
-EMAIL_PORT = env.int('EMAIL_PORT', default=25)
-EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='yeoman@docklabs.ai')
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'core': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'yeoman': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}
 
-# Documents (keel.documents)
-DOCUMENTS_STORAGE_BACKEND = env('DOCUMENTS_STORAGE_BACKEND', default='local')
-DOCUMENTS_MAX_SIZE_MB = env.int('DOCUMENTS_MAX_SIZE_MB', default=10)
-CLAMAV_ENABLED = env.bool('CLAMAV_ENABLED', default=False)
+# Security
+SESSION_COOKIE_AGE = 3600
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-# Geocoding
-GOOGLE_GEOCODING_API_KEY = env('GOOGLE_GEOCODING_API_KEY', default='')
+if not DEBUG:
+    SECURE_SSL_REDIRECT = False  # Railway handles SSL termination
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
 
-# Calendar Push
-YEOMAN_CALENDAR_BACKEND = 'yeoman.services.calendar_push.GoogleCalendarBackend'
-GOOGLE_CALENDAR_CREDENTIALS_JSON = env('GOOGLE_CALENDAR_CREDENTIALS_JSON', default='')
-GOOGLE_CALENDAR_ID = env('GOOGLE_CALENDAR_ID', default='primary')
+# DRF
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 25,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+}
 
-# Rate limiting
-YEOMAN_PUBLIC_FORM_RATE_LIMIT = env('YEOMAN_PUBLIC_FORM_RATE_LIMIT', default='10/h')
+# Allauth
+SITE_ID = 1
 
-# Login
-LOGIN_URL = '/admin/login/'
-LOGIN_REDIRECT_URL = '/'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+_MSFT_TENANT = os.environ.get('MICROSOFT_TENANT_ID', 'common')
+SOCIALACCOUNT_PROVIDERS = {
+    'microsoft': {
+        'APP': {
+            'client_id': os.environ.get('MICROSOFT_CLIENT_ID', ''),
+            'secret': os.environ.get('MICROSOFT_CLIENT_SECRET', ''),
+        },
+        'SCOPE': ['openid', 'email', 'profile', 'User.Read'],
+        'AUTH_PARAMS': {'prompt': 'select_account'},
+        'TENANT': _MSFT_TENANT,
+    },
+}
+
+MFA_ADAPTER = 'allauth.mfa.adapter.DefaultMFAAdapter'
+MFA_SUPPORTED_TYPES = ['totp', 'webauthn', 'recovery_codes']
+MFA_TOTP_ISSUER = 'Yeoman'
+MFA_PASSKEY_LOGIN_ENABLED = True
+
+# Keel
+KEEL_PRODUCT_NAME = 'Yeoman'
+KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
+KEEL_API_KEY = os.environ.get('KEEL_API_KEY', '')
+KEEL_AUDIT_LOG_MODEL = 'core.AuditLog'
+KEEL_NOTIFICATION_MODEL = 'core.Notification'
+KEEL_NOTIFICATION_PREFERENCE_MODEL = 'core.NotificationPreference'
+KEEL_NOTIFICATION_LOG_MODEL = 'core.NotificationLog'
+KEEL_CSP_POLICY = {}
+
+# Yeoman-specific
+GOOGLE_GEOCODING_API_KEY = os.environ.get('GOOGLE_GEOCODING_API_KEY', '')
+YEOMAN_CALENDAR_BACKEND = os.environ.get(
+    'YEOMAN_CALENDAR_BACKEND',
+    'yeoman.services.calendar_push.GoogleCalendarBackend',
+)
+
+# Site
+SITE_NAME = 'Yeoman'
