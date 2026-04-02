@@ -1,8 +1,28 @@
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Row, Column, Submit, HTML
 
 from yeoman.models import Invitation
+
+
+class LoginForm(AuthenticationForm):
+    """Styled login form with Bootstrap classes."""
+
+    username = forms.CharField(
+        label='Username or email',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Username or email',
+            'autofocus': True,
+        }),
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Password',
+        }),
+    )
 
 
 class InvitationStaffForm(forms.ModelForm):

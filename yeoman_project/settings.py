@@ -266,6 +266,8 @@ MFA_PASSKEY_LOGIN_ENABLED = True
 
 # Keel
 KEEL_PRODUCT_NAME = 'Yeoman'
+KEEL_PRODUCT_ICON = 'bi-calendar2-week'
+KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
 KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
 KEEL_API_KEY = os.environ.get('KEEL_API_KEY', '')
 KEEL_AUDIT_LOG_MODEL = 'core.AuditLog'
@@ -281,6 +283,7 @@ KEEL_CALENDAR_SYNC_LOG_MODEL = 'core.CalendarSyncLog'
 
 # Yeoman-specific
 GOOGLE_GEOCODING_API_KEY = os.environ.get('GOOGLE_GEOCODING_API_KEY', '')
+MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', '')
 
 # Site
 SITE_NAME = 'Yeoman'

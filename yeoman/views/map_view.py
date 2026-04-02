@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -9,6 +10,11 @@ from yeoman.workflow import STATUS_DISPLAY
 
 class MapView(LoginRequiredMixin, TemplateView):
     template_name = 'yeoman/map.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['mapbox_token'] = getattr(settings, 'MAPBOX_ACCESS_TOKEN', '')
+        return ctx
 
 
 @login_required

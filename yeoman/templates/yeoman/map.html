@@ -3,7 +3,7 @@
 {% block title %}Map{% endblock %}
 
 {% block extra_css %}
-<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet">
 <style>#map { height: 600px; border-radius: 0.375rem; }</style>
 {% endblock %}
 
@@ -24,33 +24,47 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Center on Connecticut
-  var map = L.map('map').setView([41.6, -72.7], 9);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  mapboxgl.accessToken = '{{ mapbox_token }}';
+
+  var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-72.7, 41.6],
+    zoom: 8.5
+  });
+
+  map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
   fetch('{% url "yeoman:map_markers_json" %}')
     .then(r => r.json())
     .then(function(markers) {
       markers.forEach(function(m) {
-        var circle = L.circleMarker([m.lat, m.lng], {
-          radius: 8,
-          fillColor: m.color,
-          color: '#fff',
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8
-        }).addTo(map);
-        circle.bindPopup(
-          '<strong><a href="' + m.url + '">' + m.title + '</a></strong><br>' +
-          m.date + '<br>' +
-          '<span class="badge" style="background:' + m.color + '">' + m.status_label + '</span><br>' +
-          (m.venue ? m.venue : '')
-        );
+        // Create marker element
+        var el = document.createElement('div');
+        el.style.width = '16px';
+        el.style.height = '16px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = m.color;
+        el.style.border = '2px solid #fff';
+        el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.3)';
+        el.style.cursor = 'pointer';
+
+        // Create popup
+        var popup = new mapboxgl.Popup({ offset: 12, maxWidth: '280px' })
+          .setHTML(
+            '<strong><a href="' + m.url + '">' + m.title + '</a></strong><br>' +
+            m.date + '<br>' +
+            '<span class="badge" style="background:' + m.color + '">' + m.status_label + '</span>' +
+            (m.venue ? '<br>' + m.venue : '')
+          );
+
+        new mapboxgl.Marker(el)
+          .setLngLat([m.lng, m.lat])
+          .setPopup(popup)
+          .addTo(map);
       });
     });
 });
