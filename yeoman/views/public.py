@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView, DetailView
 
+from keel.notifications.dispatch import notify
+
 from core.models import Agency
 from yeoman.forms import PublicInvitationForm
 from yeoman.models import Invitation, InvitationAttachment
@@ -59,6 +61,15 @@ class PublicInviteView(FormView):
         cache_key = f'yeoman_invite_rate_{ip}'
         count = cache.get(cache_key, 0)
         cache.set(cache_key, count + 1, 3600)  # 1 hour window
+
+        # Notify admins/schedulers of the new invitation (role-based resolution)
+        notify(
+            event='invitation_received',
+            context={'invitation': invitation},
+            title=str(invitation.event_name),
+            message=f'New invitation from {invitation.submitter_name} ({invitation.submitter_organization}).',
+            link=f'/invitations/{invitation.pk}/',
+        )
 
         self.status_token = invitation.status_token
         return super().form_valid(form)

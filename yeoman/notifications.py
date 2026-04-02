@@ -13,6 +13,7 @@ YEOMAN_NOTIFICATION_TYPES = [
         category='Invitations',
         default_channels=['in_app', 'email'],
         default_roles=['yeoman_admin', 'yeoman_scheduler'],
+        email_subject='New invitation: {title}',
     ),
     NotificationType(
         key='invitation_assigned',
@@ -20,6 +21,7 @@ YEOMAN_NOTIFICATION_TYPES = [
         description='An invitation has been assigned to you.',
         category='Invitations',
         default_channels=['in_app', 'email'],
+        email_subject='Invitation assigned to you: {title}',
     ),
     NotificationType(
         key='invitation_delegated',
@@ -27,20 +29,23 @@ YEOMAN_NOTIFICATION_TYPES = [
         description='An invitation has been delegated to you.',
         category='Invitations',
         default_channels=['in_app', 'email'],
+        email_subject='Invitation delegated to you: {title}',
     ),
     NotificationType(
         key='invitation_accepted',
         label='Invitation Accepted',
-        description='Your invitation has been accepted.',
+        description='An invitation has been accepted.',
         category='Invitations',
         default_channels=['email'],
+        email_subject='Invitation accepted: {title}',
     ),
     NotificationType(
         key='invitation_declined',
         label='Invitation Declined',
-        description='Your invitation has been declined.',
+        description='An invitation has been declined.',
         category='Invitations',
         default_channels=['email'],
+        email_subject='Invitation declined: {title}',
     ),
     NotificationType(
         key='invitation_scheduled',
@@ -48,6 +53,7 @@ YEOMAN_NOTIFICATION_TYPES = [
         description='An invitation has been pushed to the calendar.',
         category='Invitations',
         default_channels=['in_app', 'email'],
+        email_subject='Invitation scheduled: {title}',
     ),
     NotificationType(
         key='invitation_status_changed',
@@ -55,6 +61,7 @@ YEOMAN_NOTIFICATION_TYPES = [
         description='The status of an invitation you are assigned to has changed.',
         category='Invitations',
         default_channels=['in_app'],
+        email_subject='Invitation update: {title}',
     ),
 ]
 

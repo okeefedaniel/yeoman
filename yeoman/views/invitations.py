@@ -7,9 +7,24 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import ListView, DetailView, UpdateView
 
+from keel.notifications.dispatch import notify
+
 from yeoman.forms import InvitationStaffForm
 from yeoman.models import Invitation
 from yeoman.workflow import STATUS_DISPLAY
+
+# Map workflow transitions to notification event keys
+TRANSITION_NOTIFICATIONS = {
+    'accept': 'invitation_accepted',
+    'decline': 'invitation_declined',
+    'push_to_calendar': 'invitation_scheduled',
+    'start_review': 'invitation_status_changed',
+    'request_info': 'invitation_status_changed',
+    'info_received': 'invitation_status_changed',
+    'complete': 'invitation_status_changed',
+    'cancel': 'invitation_status_changed',
+    'reopen': 'invitation_status_changed',
+}
 
 
 class InvitationListView(LoginRequiredMixin, ListView):
@@ -140,6 +155,22 @@ def invitation_transition(request, pk):
         invitation.transition(transition_name, user=request.user)
         label = transition_name.replace('_', ' ').title()
         messages.success(request, f'Invitation transitioned: {label}')
+
+        # Dispatch notification
+        event_key = TRANSITION_NOTIFICATIONS.get(transition_name)
+        if event_key:
+            recipients = [
+                u for u in [invitation.assigned_to, invitation.delegated_to]
+                if u is not None
+            ]
+            notify(
+                event=event_key,
+                actor=request.user,
+                recipients=recipients or None,
+                context={'invitation': invitation},
+                title=str(invitation.event_name),
+                link=f'/invitations/{invitation.pk}/',
+            )
     except (ValueError, PermissionError) as e:
         messages.error(request, str(e))
 
