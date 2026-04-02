@@ -10,7 +10,7 @@ class InvitationTag(models.Model):
     """Flexible tagging for invitations. Examples: 'legislative', 'economic-dev', 'education'."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     agency = models.ForeignKey(
-        'core.Agency', on_delete=models.CASCADE, related_name='invitation_tags',
+        'keel_accounts.Agency', on_delete=models.CASCADE, related_name='invitation_tags',
     )
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100)
@@ -32,7 +32,7 @@ class Invitation(KeelBaseModel):
     WORKFLOW_NAME = 'yeoman_invitation'
 
     agency = models.ForeignKey(
-        'core.Agency', on_delete=models.CASCADE, related_name='invitations',
+        'keel_accounts.Agency', on_delete=models.CASCADE, related_name='invitations',
     )
 
     # === Status (workflow) ===
@@ -197,7 +197,7 @@ class Invitation(KeelBaseModel):
                 continue
 
             if user and t.get('roles'):
-                user_roles = user.get_roles(org=getattr(self, 'agency', None))
+                user_roles = [user.role]
                 if not any(r in user_roles for r in t['roles']):
                     continue
 
@@ -227,7 +227,7 @@ class Invitation(KeelBaseModel):
             )
 
         if user and transition.get('roles'):
-            user_roles = user.get_roles(org=getattr(self, 'agency', None))
+            user_roles = [user.role]
             if not any(r in user_roles for r in transition['roles']):
                 raise PermissionError(
                     f"User {user} lacks required role for '{transition_name}'. "

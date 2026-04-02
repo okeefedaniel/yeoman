@@ -6,10 +6,19 @@ import random
 from datetime import date, time, timedelta
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from core.models import Agency, User
+from keel.accounts.models import Agency, ProductAccess
 from yeoman.models import Invitation, InvitationTag
+
+User = get_user_model()
+
+# Role constants (must match PRODUCT_ROLES in keel/accounts/models.py)
+ROLE_ADMIN = 'yeoman_admin'
+ROLE_SCHEDULER = 'yeoman_scheduler'
+ROLE_VIEWER = 'yeoman_viewer'
+ROLE_DELEGATE = 'yeoman_delegate'
 
 
 class Command(BaseCommand):
@@ -25,13 +34,13 @@ class Command(BaseCommand):
         )
         self.stdout.write(f"  Agency: {agency.name} ({'created' if created else 'exists'})")
 
-        # 2. Users (one per role)
+        # 2. Users (one per role) + ProductAccess
         users = {}
         user_defs = [
-            ('dokeefe', 'Dan', "O'Keefe", User.Role.ADMIN),
-            ('jscheduler', 'Jane', 'Scheduler', User.Role.SCHEDULER),
-            ('bviewer', 'Bob', 'Viewer', User.Role.VIEWER),
-            ('ddelegate', 'Diana', 'Delegate', User.Role.DELEGATE),
+            ('dokeefe', 'Dan', "O'Keefe", ROLE_ADMIN),
+            ('jscheduler', 'Jane', 'Scheduler', ROLE_SCHEDULER),
+            ('bviewer', 'Bob', 'Viewer', ROLE_VIEWER),
+            ('ddelegate', 'Diana', 'Delegate', ROLE_DELEGATE),
         ]
         for username, first, last, role in user_defs:
             user, created = User.objects.get_or_create(
@@ -40,19 +49,26 @@ class Command(BaseCommand):
                     'first_name': first,
                     'last_name': last,
                     'email': f'{username}@decd.ct.gov',
-                    'role': role,
-                    'is_staff': role in (User.Role.ADMIN, User.Role.SCHEDULER),
+                    'is_staff': role in (ROLE_ADMIN, ROLE_SCHEDULER),
+                    'agency': agency,
                 },
             )
             if created:
                 user.set_password('yeoman2026')
                 user.save()
 
+            # Ensure ProductAccess exists for this user
+            ProductAccess.objects.get_or_create(
+                user=user,
+                product='yeoman',
+                defaults={'role': role, 'is_active': True},
+            )
+
             users[role] = user
             self.stdout.write(f"  User: {user} ({role}) ({'created' if created else 'exists'})")
 
         # Make admin a superuser for Django admin access
-        admin_user = users[User.Role.ADMIN]
+        admin_user = users[ROLE_ADMIN]
         if not admin_user.is_superuser:
             admin_user.is_superuser = True
             admin_user.is_staff = True
@@ -180,9 +196,9 @@ class Command(BaseCommand):
                     virtual_link='https://zoom.us/j/1234567890' if modality in ('virtual', 'hybrid') else '',
                     priority=random.choice(priorities),
                     status=status,
-                    assigned_to=users[User.Role.SCHEDULER] if status != 'received' else None,
-                    delegated_to=users[User.Role.DELEGATE] if status == 'delegated' else None,
-                    delegated_by=users[User.Role.ADMIN] if status == 'delegated' else None,
+                    assigned_to=users[ROLE_SCHEDULER] if status != 'received' else None,
+                    delegated_to=users[ROLE_DELEGATE] if status == 'delegated' else None,
+                    delegated_by=users[ROLE_ADMIN] if status == 'delegated' else None,
                     created_by=None,
                 )
 

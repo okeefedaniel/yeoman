@@ -7,7 +7,7 @@ from django.views.generic import FormView, DetailView
 
 from keel.notifications.dispatch import notify
 
-from core.models import Agency
+from keel.accounts.models import Agency
 from yeoman.forms import PublicInvitationForm
 from yeoman.models import Invitation, InvitationAttachment
 from yeoman.workflow import STATUS_DISPLAY

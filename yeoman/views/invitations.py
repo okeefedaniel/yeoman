@@ -184,7 +184,8 @@ def invitation_delegate(request, pk):
         return redirect('yeoman:invitation_detail', pk=pk)
 
     from yeoman.services.delegation import delegate_invitation
-    from core.models import User
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
 
     invitation = get_object_or_404(Invitation, pk=pk)
     delegate_id = request.POST.get('delegate_to')

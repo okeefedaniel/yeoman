@@ -1,23 +1,6 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Agency, AuditLog, CalendarEvent, Notification, NotificationPreference, User
-
-
-@admin.register(User)
-class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_active')
-    list_filter = ('role', 'is_active', 'is_staff')
-    fieldsets = BaseUserAdmin.fieldsets + (
-        ('Yeoman', {'fields': ('role', 'title', 'phone', 'organization_name')}),
-    )
-
-
-@admin.register(Agency)
-class AgencyAdmin(admin.ModelAdmin):
-    list_display = ('abbreviation', 'name', 'is_active', 'created_at')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'abbreviation')
+from .models import AuditLog, CalendarEvent, Notification, NotificationPreference
 
 
 @admin.register(AuditLog)

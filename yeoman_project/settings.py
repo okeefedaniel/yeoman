@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.sites',
     # Keel (DockLabs shared platform)
+    'keel.accounts',
     'keel.core',
     'keel.security',
     'keel.notifications',
@@ -78,6 +79,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'keel.accounts.middleware.ProductAccessMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -115,7 +117,7 @@ DATABASES = {
     )
 }
 
-AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = 'keel_accounts.KeelUser'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
