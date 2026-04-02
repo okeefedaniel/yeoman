@@ -16,3 +16,6 @@ class YeomanConfig(AppConfig):
             default_duration_minutes=90,
             title_template='{event_name}',
         ))
+
+        from yeoman.notifications import register_notification_types
+        register_notification_types()

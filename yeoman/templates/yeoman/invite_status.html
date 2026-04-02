@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load yeoman_tags %}
+
+{% block title %}Invitation Status{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h2 class="mb-4">Invitation Status</h2>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h4 class="mb-0">{{ invitation.event_name }}</h4>
+            {% status_badge invitation.status %}
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Event Date</div>
+              <div>{{ invitation.event_date|date:"l, M d, Y" }}</div>
+            </div>
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Time</div>
+              <div>
+                {{ invitation.event_time_start|time:"g:i A"|default:"Flexible" }}{% if invitation.event_time_end %} - {{ invitation.event_time_end|time:"g:i A" }}{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Format</div>
+              <div>{{ invitation.get_event_format_display }} &middot; {{ invitation.get_modality_display }}</div>
+            </div>
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Submitted</div>
+              <div>{{ invitation.created_at|date:"M d, Y" }}</div>
+            </div>
+          </div>
+
+          {% if invitation.venue_name %}
+          <hr>
+          <div class="small text-muted text-uppercase mb-1">Location</div>
+          <p class="mb-0">{{ invitation.venue_name }}{% if invitation.venue_city %}, {{ invitation.venue_city }}{% endif %}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Status Timeline -->
+      <div class="card">
+        <div class="card-header"><i class="bi bi-clock-history me-2"></i>Status</div>
+        <div class="card-body">
+          {% with sd=STATUS_DISPLAY %}
+          {% for key, display in sd.items %}
+          <div class="d-flex align-items-center mb-2 {% if key == invitation.status %}fw-bold{% else %}text-muted{% endif %}">
+            {% if key == invitation.status %}
+            <i class="bi bi-arrow-right-circle-fill text-primary me-2"></i>
+            {% else %}
+            <i class="bi bi-circle me-2"></i>
+            {% endif %}
+            {{ display.label }}
+          </div>
+          {% endfor %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

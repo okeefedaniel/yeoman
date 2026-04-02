@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load yeoman_tags crispy_forms_tags %}
+
+{% block title %}{{ invitation.event_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <a href="{% url 'yeoman:invitation_list' %}" class="text-muted text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>Back to Invitations
+      </a>
+      <h2 class="mt-2 mb-1">{{ invitation.event_name }}</h2>
+      <div class="d-flex gap-2 align-items-center">
+        {% status_badge invitation.status %}
+        <span class="badge bg-{{ invitation.priority|priority_class }}">{{ invitation.get_priority_display }}</span>
+        <span class="text-muted small">{{ invitation.get_event_format_display }} &middot; {{ invitation.get_modality_display }}</span>
+      </div>
+    </div>
+    <a href="{% url 'yeoman:invitation_update' invitation.pk %}" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-pencil me-1"></i>Edit
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <!-- Event Info -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-calendar-event me-2"></i>Event Details</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="small text-muted text-uppercase">Date</div>
+              <div class="{% if invitation.is_past %}text-danger{% endif %}">
+                {{ invitation.event_date|date:"l, M d, Y" }}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="small text-muted text-uppercase">Time</div>
+              <div>
+                {{ invitation.event_time_start|time:"g:i A" }}{% if invitation.event_time_end %} - {{ invitation.event_time_end|time:"g:i A" }}{% endif %}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="small text-muted text-uppercase">Attendees</div>
+              <div>{{ invitation.expected_attendees|default:"—" }}</div>
+            </div>
+          </div>
+          {% if invitation.event_description %}
+          <hr>
+          <div class="small text-muted text-uppercase mb-1">Description</div>
+          <p>{{ invitation.event_description }}</p>
+          {% endif %}
+          {% if invitation.venue_name %}
+          <hr>
+          <div class="small text-muted text-uppercase mb-1">Location</div>
+          <p class="mb-0">
+            <strong>{{ invitation.venue_name }}</strong><br>
+            {{ invitation.venue_address }}{% if invitation.venue_city %}, {{ invitation.venue_city }}{% endif %}
+            {{ invitation.venue_state }} {{ invitation.venue_zip }}
+          </p>
+          {% endif %}
+          {% if invitation.virtual_link %}
+          <hr>
+          <div class="small text-muted text-uppercase mb-1">Virtual</div>
+          <p class="mb-0">
+            {{ invitation.virtual_platform|default:"Link" }}:
+            <a href="{{ invitation.virtual_link }}" target="_blank">{{ invitation.virtual_link|truncatechars:60 }}</a>
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Submitter Info -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-person me-2"></i>Submitter</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Name</div>
+              <div>{{ invitation.submitter_name }}</div>
+            </div>
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Email</div>
+              <div><a href="mailto:{{ invitation.submitter_email }}">{{ invitation.submitter_email }}</a></div>
+            </div>
+            {% if invitation.submitter_organization %}
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Organization</div>
+              <div>{{ invitation.submitter_organization }}</div>
+            </div>
+            {% endif %}
+            {% if invitation.submitter_title %}
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Title</div>
+              <div>{{ invitation.submitter_title }}</div>
+            </div>
+            {% endif %}
+            {% if invitation.submitter_phone %}
+            <div class="col-md-6">
+              <div class="small text-muted text-uppercase">Phone</div>
+              <div>{{ invitation.submitter_phone }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Logistics -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-clipboard-check me-2"></i>Logistics</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <div class="small text-muted text-uppercase">Surrogate OK</div>
+              <div>{% if invitation.surrogate_ok %}<span class="text-success">Yes</span>{% else %}No{% endif %}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted text-uppercase">Press Expected</div>
+              <div>{{ invitation.get_press_expected_display }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted text-uppercase">Recorded</div>
+              <div>{{ invitation.get_will_be_recorded_display }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="small text-muted text-uppercase">Expected Attendees</div>
+              <div>{{ invitation.expected_attendees|default:"—" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delegation History -->
+      {% if delegation_history %}
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-arrow-left-right me-2"></i>Delegation History</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr><th>From</th><th>To</th><th>Notes</th><th>Date</th></tr>
+              </thead>
+              <tbody>
+                {% for log in delegation_history %}
+                <tr>
+                  <td>{{ log.delegated_by }}</td>
+                  <td>{{ log.delegated_to }}</td>
+                  <td class="small text-muted">{{ log.notes|truncatechars:80 }}</td>
+                  <td class="small">{{ log.created_at|date:"M d, Y g:i A" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Attachments -->
+      {% if attachments %}
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-paperclip me-2"></i>Attachments</div>
+        <div class="list-group list-group-flush">
+          {% for att in attachments %}
+          <a href="{{ att.file.url }}" class="list-group-item list-group-item-action" target="_blank">
+            <i class="bi bi-file-earmark me-2"></i>{{ att.original_filename }}
+            <span class="text-muted small ms-2">{{ att.size_bytes|filesizeformat }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Workflow Transitions -->
+      {% if transitions %}
+      <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-arrow-right-circle me-2"></i>Actions
+        </div>
+        <div class="card-body d-grid gap-2">
+          {% for t in transitions %}
+          <form method="post" action="{% url 'yeoman:invitation_transition' invitation.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="transition" value="{{ t.name }}">
+            <button type="submit" class="btn btn-outline-primary btn-sm w-100"
+                    data-confirm="Transition to {{ t.to }}?">
+              {{ t.name|title }}
+            </button>
+          </form>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Quick Info -->
+      <div class="card mb-4">
+        <div class="card-header">Quick Info</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="small text-muted text-uppercase">Status</div>
+            {% status_badge invitation.status %}
+          </div>
+          <div class="mb-3">
+            <div class="small text-muted text-uppercase">Assigned To</div>
+            <div>{{ invitation.assigned_to|default:"Unassigned" }}</div>
+          </div>
+          {% if invitation.delegated_to %}
+          <div class="mb-3">
+            <div class="small text-muted text-uppercase">Delegated To</div>
+            <div>{{ invitation.delegated_to }}</div>
+          </div>
+          {% endif %}
+          {% if invitation.calendar_event_id %}
+          <div class="mb-3">
+            <div class="small text-muted text-uppercase">Calendar</div>
+            <span class="badge bg-success">Synced</span>
+          </div>
+          {% endif %}
+          <hr>
+          <div class="small text-muted">
+            Created {{ invitation.created_at|date:"M d, Y g:i A" }}<br>
+            Updated {{ invitation.updated_at|date:"M d, Y g:i A" }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Delegate -->
+      <div class="card mb-4">
+        <div class="card-header">Delegate</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'yeoman:invitation_delegate' invitation.pk %}">
+            {% csrf_token %}
+            <div class="mb-2">
+              <select name="delegate_to" class="form-select form-select-sm" required>
+                <option value="">Select user...</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Notes (optional)"></textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+              <i class="bi bi-person-plus me-1"></i>Delegate
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

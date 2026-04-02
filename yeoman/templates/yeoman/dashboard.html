@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load yeoman_tags %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Dashboard</h2>
+      <p class="text-muted mb-0">Invitation workflow overview</p>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'yeoman:invitation_list' %}?status=received" class="text-decoration-none">
+        <div class="card stat-card accent-gold h-100 stat-card-link">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="stat-value">{{ needs_attention }}</div>
+                <div class="stat-label">Needs Attention</div>
+              </div>
+              <i class="bi bi-exclamation-circle fs-3 text-muted opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'yeoman:invitation_list' %}" class="text-decoration-none">
+        <div class="card stat-card h-100 stat-card-link">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="stat-value">{{ active_count }}</div>
+                <div class="stat-label">Active</div>
+              </div>
+              <i class="bi bi-arrow-repeat fs-3 text-muted opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <a href="{% url 'yeoman:calendar' %}" class="text-decoration-none">
+        <div class="card stat-card accent-green h-100 stat-card-link">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="stat-value">{{ upcoming_events|length }}</div>
+                <div class="stat-label">This Week</div>
+              </div>
+              <i class="bi bi-calendar-event fs-3 text-muted opacity-50"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      {% if overdue_count %}
+      <div class="card stat-card accent-red h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-value">{{ overdue_count }}</div>
+              <div class="stat-label">Overdue</div>
+            </div>
+            <i class="bi bi-alarm fs-3 text-muted opacity-50"></i>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-value">{{ total_count }}</div>
+              <div class="stat-label">Total Invitations</div>
+            </div>
+            <i class="bi bi-envelope-open fs-3 text-muted opacity-50"></i>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-envelope me-2"></i>Recent Invitations</span>
+          <a href="{% url 'yeoman:invitation_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+          {% if recent_invitations %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Submitter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for inv in recent_invitations %}
+                <tr data-href="{% url 'yeoman:invitation_detail' inv.pk %}" style="cursor:pointer;">
+                  <td>
+                    <a href="{% url 'yeoman:invitation_detail' inv.pk %}" class="text-decoration-none fw-semibold">
+                      {{ inv.event_name|truncatechars:50 }}
+                    </a>
+                  </td>
+                  <td class="{% if inv.is_past %}text-danger{% endif %}">{{ inv.event_date|date:"M d, Y" }}</td>
+                  <td>{% status_badge inv.status %}</td>
+                  <td class="text-muted small">{{ inv.submitter_name }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="bi bi-envelope-x d-block"></i>
+            <h5>No invitations yet</h5>
+            <p class="text-muted">Share your invite link to start receiving invitations.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Upcoming Events -->
+      {% if upcoming_events %}
+      <div class="card mb-4">
+        <div class="card-header">
+          <i class="bi bi-calendar-week me-2 text-primary"></i>Upcoming This Week
+        </div>
+        <div class="list-group list-group-flush">
+          {% for inv in upcoming_events %}
+          <a href="{% url 'yeoman:invitation_detail' inv.pk %}" class="list-group-item list-group-item-action">
+            <div class="fw-semibold small">{{ inv.event_name|truncatechars:40 }}</div>
+            <small class="text-muted">{{ inv.event_date|date:"D, M d" }} at {{ inv.event_time_start|time:"g:i A" }}</small>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Status Breakdown -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <i class="bi bi-pie-chart me-2"></i>By Status
+        </div>
+        <div class="list-group list-group-flush">
+          {% for status_key, display in STATUS_DISPLAY.items %}
+          {% with count=status_counts|default_if_none:"" %}
+          <a href="{% url 'yeoman:invitation_list' %}?status={{ status_key }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>{% status_badge status_key %}</span>
+            <span class="badge bg-light text-dark">{{ status_counts|default_if_none:0 }}</span>
+          </a>
+          {% endwith %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">Quick Actions</div>
+        <div class="card-body d-grid gap-2">
+          <a href="{% url 'yeoman:public_invite' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-link-45deg me-1"></i>Public Invite Link
+          </a>
+          <a href="{% url 'yeoman:calendar' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-calendar3 me-1"></i>Calendar View
+          </a>
+          <a href="{% url 'yeoman:map' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-geo-alt me-1"></i>Map View
+          </a>
+          <a href="{% url 'yeoman:reports' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-graph-up me-1"></i>Reports
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

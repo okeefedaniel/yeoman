@@ -39,7 +39,8 @@ class Invitation(KeelBaseModel):
     status = models.CharField(max_length=50, default='received', db_index=True)
 
     # === Submitter Info ===
-    submitter_name = models.CharField(max_length=255)
+    submitter_first_name = models.CharField(max_length=128)
+    submitter_last_name = models.CharField(max_length=128)
     submitter_email = models.EmailField()
     submitter_phone = models.CharField(max_length=50, blank=True)
     submitter_organization = models.CharField(max_length=255, blank=True)
@@ -54,15 +55,18 @@ class Invitation(KeelBaseModel):
     event_timezone = models.CharField(max_length=50, default='America/New_York')
 
     FORMAT_CHOICES = [
-        ('roundtable', 'Roundtable'),
+        ('presentation', 'Presentation'),
         ('keynote', 'Keynote'),
-        ('panel', 'Panel'),
-        ('fireside', 'Fireside Chat'),
+        ('panel_moderator', 'Panel Moderator'),
+        ('panel_participant', 'Panel Participant'),
+        ('site_visit', 'Site Visit'),
+        ('roundtable', 'Roundtable'),
         ('ribbon_cutting', 'Ribbon Cutting'),
-        ('tour', 'Tour / Site Visit'),
         ('meeting', 'Meeting'),
         ('reception', 'Reception'),
         ('conference', 'Conference'),
+        ('fireside', 'Fireside Chat'),
+        ('tour', 'Tour'),
         ('other', 'Other'),
     ]
     event_format = models.CharField(max_length=50, choices=FORMAT_CHOICES)
@@ -120,6 +124,25 @@ class Invitation(KeelBaseModel):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='normal')
     tags = models.ManyToManyField(InvitationTag, blank=True)
 
+    # === Event Logistics ===
+    expected_attendees = models.PositiveIntegerField(null=True, blank=True)
+    surrogate_ok = models.BooleanField(
+        default=True,
+        help_text="Submitter is interested in a surrogate if principal has a conflict.",
+    )
+
+    YES_NO_UNKNOWN = [
+        ('unknown', 'Unknown'),
+        ('yes', 'Yes'),
+        ('no', 'No'),
+    ]
+    press_expected = models.CharField(
+        max_length=10, choices=YES_NO_UNKNOWN, default='unknown',
+    )
+    will_be_recorded = models.CharField(
+        max_length=10, choices=YES_NO_UNKNOWN, default='unknown',
+    )
+
     # === Outcome ===
     decline_reason = models.TextField(blank=True)
     calendar_event_id = models.CharField(
@@ -143,6 +166,10 @@ class Invitation(KeelBaseModel):
 
     def __str__(self):
         return f"{self.event_name} ({self.event_date})"
+
+    @property
+    def submitter_name(self):
+        return f"{self.submitter_first_name} {self.submitter_last_name}".strip()
 
     @property
     def is_past(self):

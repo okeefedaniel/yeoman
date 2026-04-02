@@ -37,8 +37,28 @@
         {% if user.is_authenticated %}
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin:index' %}">
+            <a class="nav-link" href="{% url 'yeoman:dashboard' %}">
               <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'yeoman:invitation_list' %}">
+              <i class="bi bi-envelope me-1"></i>Invitations
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'yeoman:calendar' %}">
+              <i class="bi bi-calendar3 me-1"></i>Calendar
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'yeoman:map' %}">
+              <i class="bi bi-geo-alt me-1"></i>Map
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'yeoman:reports' %}">
+              <i class="bi bi-graph-up me-1"></i>Reports
             </a>
           </li>
           <li class="nav-item">

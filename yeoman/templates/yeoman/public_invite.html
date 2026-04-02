@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Submit an Invitation{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="text-center mb-4">
+        <h2>Event Invitation</h2>
+        <p class="text-muted">
+          Thank you for considering us.<br>
+          If you'll enter the information below, we will get back to you quickly.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% crispy form %}
+          </form>
+        </div>
+      </div>
+      <p class="text-center text-muted small mt-3">
+        Your email will only be used to communicate about this invitation request.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

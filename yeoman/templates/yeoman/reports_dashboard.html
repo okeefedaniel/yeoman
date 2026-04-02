@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Reports</h2>
+    <div class="d-flex gap-2">
+      <form method="get" class="d-flex gap-2">
+        <select name="days" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+          <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+          <option value="180" {% if days == 180 %}selected{% endif %}>Last 6 months</option>
+          <option value="365" {% if days == 365 %}selected{% endif %}>Last year</option>
+        </select>
+      </form>
+      <a href="{% url 'yeoman:reports_export' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-download me-1"></i>Export CSV
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="stat-value">{{ total_period }}</div>
+          <div class="stat-label">Total Invitations</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card accent-green h-100">
+        <div class="card-body">
+          <div class="stat-value">{{ delegation_rate }}%</div>
+          <div class="stat-label">Delegation Rate</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="stat-value">{{ by_status|length }}</div>
+          <div class="stat-label">Status Categories</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="stat-value">{{ top_orgs|length }}</div>
+          <div class="stat-label">Organizations</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Charts Column -->
+    <div class="col-lg-8">
+      <!-- Monthly Volume -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Monthly Volume</div>
+        <div class="card-body">
+          <canvas id="monthlyChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- By Status -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-pie-chart me-2"></i>By Status</div>
+        <div class="card-body">
+          <canvas id="statusChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tables Column -->
+    <div class="col-lg-4">
+      <!-- By Format -->
+      <div class="card mb-4">
+        <div class="card-header">By Format</div>
+        <div class="list-group list-group-flush">
+          {% for row in by_format %}
+          <div class="list-group-item d-flex justify-content-between">
+            <span>{{ row.event_format }}</span>
+            <span class="badge bg-primary rounded-pill">{{ row.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Top Organizations -->
+      <div class="card mb-4">
+        <div class="card-header">Top Organizations</div>
+        <div class="list-group list-group-flush">
+          {% for row in top_orgs %}
+          <div class="list-group-item d-flex justify-content-between">
+            <span class="small">{{ row.submitter_organization|truncatechars:30 }}</span>
+            <span class="badge bg-secondary rounded-pill">{{ row.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Monthly Volume Chart
+var monthlyData = {{ monthly_volume|safe }};
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: monthlyData.map(function(d) { return d.month; }),
+    datasets: [{
+      label: 'Invitations',
+      data: monthlyData.map(function(d) { return d.count; }),
+      backgroundColor: '#1F64E5',
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  }
+});
+
+// Status Chart
+var statusData = {{ by_status|safe }};
+var statusColors = {
+  'received': '#6c757d', 'under_review': '#0d6efd', 'needs_info': '#ffc107',
+  'accepted': '#198754', 'declined': '#dc3545', 'delegated': '#20c997',
+  'scheduled': '#6f42c1', 'completed': '#495057', 'cancelled': '#e9967a'
+};
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: statusData.map(function(d) { return d.status; }),
+    datasets: [{
+      data: statusData.map(function(d) { return d.count; }),
+      backgroundColor: statusData.map(function(d) { return statusColors[d.status] || '#6c757d'; }),
+    }]
+  },
+  options: { responsive: true }
+});
+</script>
+{% endblock %}

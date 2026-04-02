@@ -157,7 +157,8 @@ class Command(BaseCommand):
 
                 inv = Invitation.objects.create(
                     agency=agency,
-                    submitter_name=sub[0],
+                    submitter_first_name=sub[0].split()[0],
+                    submitter_last_name=' '.join(sub[0].split()[1:]),
                     submitter_email=sub[1],
                     submitter_organization=sub[2],
                     submitter_title=sub[3],

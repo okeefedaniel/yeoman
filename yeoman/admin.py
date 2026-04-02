@@ -22,11 +22,15 @@ class DelegationLogInline(admin.TabularInline):
 class InvitationAdmin(admin.ModelAdmin):
     list_display = (
         'event_name', 'event_date', 'event_format', 'status',
-        'priority', 'submitter_name', 'assigned_to', 'created_at',
+        'priority', 'get_submitter_name', 'assigned_to', 'created_at',
     )
+
+    @admin.display(description='Submitter', ordering='submitter_last_name')
+    def get_submitter_name(self, obj):
+        return obj.submitter_name
     list_filter = ('status', 'event_format', 'modality', 'priority', 'agency')
     search_fields = (
-        'event_name', 'submitter_name', 'submitter_email',
+        'event_name', 'submitter_first_name', 'submitter_last_name', 'submitter_email',
         'submitter_organization', 'venue_name',
     )
     readonly_fields = ('id', 'status_token', 'created_at', 'updated_at')
@@ -46,7 +50,8 @@ class InvitationAdmin(admin.ModelAdmin):
         }),
         ('Submitter', {
             'fields': (
-                'submitter_name', 'submitter_email', 'submitter_phone',
+                'submitter_first_name', 'submitter_last_name',
+                'submitter_email', 'submitter_phone',
                 'submitter_organization', 'submitter_title',
             ),
         }),
@@ -60,6 +65,12 @@ class InvitationAdmin(admin.ModelAdmin):
         ('Virtual', {
             'fields': ('virtual_platform', 'virtual_link'),
             'classes': ('collapse',),
+        }),
+        ('Logistics', {
+            'fields': (
+                'expected_attendees', 'surrogate_ok',
+                'press_expected', 'will_be_recorded',
+            ),
         }),
         ('Workflow', {
             'fields': (
