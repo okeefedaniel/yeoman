@@ -1,6 +1,9 @@
 from django.contrib import admin
 
-from .models import DelegationLog, Invitation, InvitationAttachment, InvitationTag
+from .models import (
+    DelegationLog, Invitation, InvitationAttachment, InvitationNote,
+    InvitationStatusHistory, InvitationTag,
+)
 
 
 class InvitationAttachmentInline(admin.TabularInline):
@@ -103,6 +106,23 @@ class InvitationTagAdmin(admin.ModelAdmin):
 class InvitationAttachmentAdmin(admin.ModelAdmin):
     list_display = ('original_filename', 'invitation', 'uploaded_by_staff', 'created_at')
     list_filter = ('uploaded_by_staff',)
+
+
+@admin.register(InvitationStatusHistory)
+class InvitationStatusHistoryAdmin(admin.ModelAdmin):
+    list_display = ('invitation', 'old_status', 'new_status', 'changed_by', 'changed_at')
+    list_filter = ('new_status',)
+    readonly_fields = ('id', 'invitation', 'old_status', 'new_status', 'changed_by', 'comment', 'changed_at')
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(InvitationNote)
+class InvitationNoteAdmin(admin.ModelAdmin):
+    list_display = ('invitation', 'author', 'is_internal', 'created_at')
+    list_filter = ('is_internal',)
+    readonly_fields = ('id', 'created_at', 'updated_at')
 
 
 @admin.register(DelegationLog)

@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
-from keel.core.models import KeelBaseModel
+from keel.core.models import KeelBaseModel, AbstractStatusHistory, AbstractInternalNote
 
 
 class InvitationTag(models.Model):
@@ -180,63 +180,18 @@ class Invitation(KeelBaseModel):
     def has_location(self):
         return self.latitude is not None and self.longitude is not None
 
-    def get_workflow(self):
-        from yeoman.workflow import YEOMAN_INVITATION_WORKFLOW
-        return YEOMAN_INVITATION_WORKFLOW
-
     def get_available_transitions(self, user=None):
-        """Return transitions available from the current state, optionally filtered by user role."""
-        workflow = self.get_workflow()
-        if not workflow:
-            return []
+        """Return Transition objects available from the current state."""
+        from yeoman.workflow import INVITATION_WORKFLOW
+        return INVITATION_WORKFLOW.get_available_transitions(self.status, user)
 
-        available = []
-        for t in workflow.get('transitions', []):
-            from_states = t['from'] if isinstance(t['from'], list) else [t['from']]
-            if self.status not in from_states:
-                continue
+    def transition(self, target_status, user=None, comment=''):
+        """Execute a workflow transition. Validates state and roles.
 
-            if user and t.get('roles'):
-                user_roles = [user.role]
-                if not any(r in user_roles for r in t['roles']):
-                    continue
-
-            available.append(t)
-        return available
-
-    def transition(self, transition_name, user=None):
-        """Execute a named transition. Validates state and roles."""
-        workflow = self.get_workflow()
-        if not workflow:
-            raise ValueError(f"No workflow registered: {self.WORKFLOW_NAME}")
-
-        transition = None
-        for t in workflow.get('transitions', []):
-            if t['name'] == transition_name:
-                transition = t
-                break
-
-        if not transition:
-            raise ValueError(f"Unknown transition: {transition_name}")
-
-        from_states = transition['from'] if isinstance(transition['from'], list) else [transition['from']]
-        if self.status not in from_states:
-            raise ValueError(
-                f"Cannot transition '{transition_name}' from state '{self.status}'. "
-                f"Allowed from: {from_states}"
-            )
-
-        if user and transition.get('roles'):
-            user_roles = [user.role]
-            if not any(r in user_roles for r in transition['roles']):
-                raise PermissionError(
-                    f"User {user} lacks required role for '{transition_name}'. "
-                    f"Required: {transition['roles']}"
-                )
-
-        self.status = transition['to']
-        self.save(update_fields=['status'])
-        return self
+        Auto-creates an InvitationStatusHistory record via the engine.
+        """
+        from yeoman.workflow import INVITATION_WORKFLOW
+        return INVITATION_WORKFLOW.execute(self, target_status, user=user, comment=comment)
 
     def save(self, **kwargs):
         # Geocode on save if address present but no coordinates
@@ -272,6 +227,23 @@ class InvitationAttachment(models.Model):
 
     def __str__(self):
         return f"{self.original_filename} on {self.invitation}"
+
+
+class InvitationStatusHistory(AbstractStatusHistory):
+    """Immutable audit trail of workflow transitions for an invitation."""
+    invitation = models.ForeignKey(
+        Invitation, on_delete=models.CASCADE, related_name='status_history',
+    )
+
+    class Meta(AbstractStatusHistory.Meta):
+        verbose_name_plural = 'invitation status histories'
+
+
+class InvitationNote(AbstractInternalNote):
+    """Internal staff note/comment on an invitation."""
+    invitation = models.ForeignKey(
+        Invitation, on_delete=models.CASCADE, related_name='notes',
+    )
 
 
 class DelegationLog(models.Model):

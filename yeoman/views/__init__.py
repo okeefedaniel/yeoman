@@ -4,6 +4,9 @@ from .invitations import (
     InvitationDetailView,
     InvitationUpdateView,
     invitation_transition,
+    invitation_claim,
+    invitation_unclaim,
+    invitation_add_note,
     invitation_delegate,
 )
 from .public import PublicInviteView, InvitationStatusView

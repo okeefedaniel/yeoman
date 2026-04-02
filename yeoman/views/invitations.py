@@ -1,6 +1,10 @@
+from itertools import chain
+from operator import attrgetter
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -10,20 +14,20 @@ from django.views.generic import ListView, DetailView, UpdateView
 from keel.notifications.dispatch import notify
 
 from yeoman.forms import InvitationStaffForm
-from yeoman.models import Invitation
+from yeoman.models import Invitation, InvitationNote
 from yeoman.workflow import STATUS_DISPLAY
 
-# Map workflow transitions to notification event keys
-TRANSITION_NOTIFICATIONS = {
-    'accept': 'invitation_accepted',
-    'decline': 'invitation_declined',
-    'push_to_calendar': 'invitation_scheduled',
-    'start_review': 'invitation_status_changed',
-    'request_info': 'invitation_status_changed',
-    'info_received': 'invitation_status_changed',
-    'complete': 'invitation_status_changed',
-    'cancel': 'invitation_status_changed',
-    'reopen': 'invitation_status_changed',
+# Map target status to notification event key
+STATUS_NOTIFICATIONS = {
+    'accepted': 'invitation_accepted',
+    'tentative': 'invitation_status_changed',
+    'declined': 'invitation_declined',
+    'scheduled': 'invitation_scheduled',
+    'delegated': 'invitation_delegated',
+    'under_review': 'invitation_status_changed',
+    'needs_info': 'invitation_status_changed',
+    'completed': 'invitation_status_changed',
+    'cancelled': 'invitation_status_changed',
 }
 
 
@@ -48,6 +52,14 @@ class InvitationListView(LoginRequiredMixin, ListView):
         modality = self.request.GET.get('modality')
         if modality:
             qs = qs.filter(modality=modality)
+        # Special filters
+        assigned = self.request.GET.get('assigned')
+        if assigned == 'me':
+            qs = qs.filter(assigned_to=self.request.user)
+        elif assigned == 'unassigned':
+            qs = qs.filter(assigned_to__isnull=True).exclude(
+                status__in=('declined', 'cancelled', 'completed'),
+            )
         q = self.request.GET.get('q', '').strip()
         if q:
             qs = qs.filter(
@@ -83,6 +95,7 @@ class InvitationListView(LoginRequiredMixin, ListView):
         ctx['current_priority'] = self.request.GET.get('priority', '')
         ctx['current_format'] = self.request.GET.get('format', '')
         ctx['current_modality'] = self.request.GET.get('modality', '')
+        ctx['current_assigned'] = self.request.GET.get('assigned', '')
         ctx['current_q'] = self.request.GET.get('q', '')
         ctx['current_sort'] = self.request.GET.get('sort', '-event_date')
         ctx['STATUS_DISPLAY'] = STATUS_DISPLAY
@@ -114,6 +127,25 @@ class InvitationDetailView(LoginRequiredMixin, DetailView):
         ctx['attachments'] = inv.attachments.all()
         ctx['STATUS_DISPLAY'] = STATUS_DISPLAY
         ctx['form'] = InvitationStaffForm(instance=inv)
+
+        # Build unified timeline from status history + notes
+        history = list(inv.status_history.select_related('changed_by').all())
+        notes = list(inv.notes.select_related('author').all())
+        delegations = list(inv.delegation_history.select_related(
+            'delegated_by', 'delegated_to',
+        ).all())
+
+        # Normalize timeline entries with (timestamp, type, object)
+        timeline = []
+        for h in history:
+            timeline.append({'timestamp': h.changed_at, 'type': 'status', 'obj': h})
+        for n in notes:
+            timeline.append({'timestamp': n.created_at, 'type': 'note', 'obj': n})
+        for d in delegations:
+            timeline.append({'timestamp': d.created_at, 'type': 'delegation', 'obj': d})
+        timeline.sort(key=lambda x: x['timestamp'], reverse=True)
+        ctx['timeline'] = timeline
+
         return ctx
 
 
@@ -144,20 +176,25 @@ class InvitationUpdateView(LoginRequiredMixin, UpdateView):
 
 @login_required
 def invitation_transition(request, pk):
-    """Handle workflow transition POST."""
+    """Handle workflow transition POST.
+
+    Expects POST data:
+        target_status — the status to transition to
+        comment — optional comment (required for some transitions like decline)
+    """
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
     invitation = get_object_or_404(Invitation, pk=pk)
-    transition_name = request.POST.get('transition')
+    target_status = request.POST.get('target_status')
+    comment = request.POST.get('comment', '').strip()
 
     try:
-        invitation.transition(transition_name, user=request.user)
-        label = transition_name.replace('_', ' ').title()
-        messages.success(request, f'Invitation transitioned: {label}')
+        transition = invitation.transition(target_status, user=request.user, comment=comment)
+        messages.success(request, f'Invitation transitioned: {transition.label}')
 
         # Dispatch notification
-        event_key = TRANSITION_NOTIFICATIONS.get(transition_name)
+        event_key = STATUS_NOTIFICATIONS.get(target_status)
         if event_key:
             recipients = [
                 u for u in [invitation.assigned_to, invitation.delegated_to]
@@ -171,9 +208,80 @@ def invitation_transition(request, pk):
                 title=str(invitation.event_name),
                 link=f'/invitations/{invitation.pk}/',
             )
-    except (ValueError, PermissionError) as e:
+    except (ValidationError, PermissionDenied) as e:
         messages.error(request, str(e))
 
+    return redirect('yeoman:invitation_detail', pk=pk)
+
+
+@login_required
+def invitation_claim(request, pk):
+    """Claim an unassigned invitation."""
+    if request.method != 'POST':
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation = get_object_or_404(Invitation, pk=pk)
+
+    if invitation.assigned_to is not None:
+        messages.warning(request, 'This invitation is already assigned.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation.assigned_to = request.user
+    invitation.save(update_fields=['assigned_to', 'updated_at'])
+
+    InvitationNote.objects.create(
+        invitation=invitation,
+        author=request.user,
+        content=f'Claimed by {request.user.get_full_name() or request.user.username}',
+    )
+
+    messages.success(request, 'Invitation claimed.')
+    return redirect('yeoman:invitation_detail', pk=pk)
+
+
+@login_required
+def invitation_unclaim(request, pk):
+    """Release assignment on an invitation."""
+    if request.method != 'POST':
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation = get_object_or_404(Invitation, pk=pk)
+    old_assignee = invitation.assigned_to
+
+    invitation.assigned_to = None
+    invitation.save(update_fields=['assigned_to', 'updated_at'])
+
+    InvitationNote.objects.create(
+        invitation=invitation,
+        author=request.user,
+        content=f'Released by {request.user.get_full_name() or request.user.username}',
+    )
+
+    messages.success(request, 'Assignment released.')
+    return redirect('yeoman:invitation_detail', pk=pk)
+
+
+@login_required
+def invitation_add_note(request, pk):
+    """Add an internal note to an invitation."""
+    if request.method != 'POST':
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation = get_object_or_404(Invitation, pk=pk)
+    content = request.POST.get('content', '').strip()
+
+    if not content:
+        messages.error(request, 'Note content cannot be empty.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    InvitationNote.objects.create(
+        invitation=invitation,
+        author=request.user,
+        content=content,
+        is_internal=True,
+    )
+
+    messages.success(request, 'Note added.')
     return redirect('yeoman:invitation_detail', pk=pk)
 
 

@@ -24,7 +24,7 @@ def delegate_invitation(invitation, delegated_by, delegated_to, notes=''):
     invitation.delegation_notes = notes
     invitation.save()
 
-    invitation.transition('delegate', user=delegated_by)
+    invitation.transition('delegated', user=delegated_by, comment=notes)
 
     notify(
         event='invitation_delegated',
