@@ -30,9 +30,13 @@ if RAILWAY_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_DOMAIN)
     ALLOWED_HOSTS.append('.railway.app')
 
+# Custom domain
+ALLOWED_HOSTS.append('.docklabs.ai')
+
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 if RAILWAY_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_DOMAIN}')
+CSRF_TRUSTED_ORIGINS.append('https://yeoman.docklabs.ai')
 CSRF_TRUSTED_ORIGINS = [o for o in CSRF_TRUSTED_ORIGINS if o]
 
 # Application definition
