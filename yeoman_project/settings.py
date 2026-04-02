@@ -160,7 +160,7 @@ if DEBUG:
 else:
     EMAIL_BACKEND = 'keel.notifications.backends.resend_backend.ResendEmailBackend'
 
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Yeoman <yeoman@docklabs.ai>')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'DockLabs <info@docklabs.ai>')
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
