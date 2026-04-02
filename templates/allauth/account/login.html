@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+      <div class="text-center mb-4">
+        <i class="bi bi-calendar2-week display-4 text-primary"></i>
+        <h1 class="h3 mt-3 mb-1">Sign in to Yeoman</h1>
+        <p class="text-muted">Event scheduling &amp; invitation workflow</p>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {% endfor %}
+          {% endif %}
+
+          <form method="post" action="{% url 'account_login' %}">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+              <p class="mb-0">{{ error }}</p>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label for="id_login" class="form-label">Username or email</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" name="login" id="id_login"
+                       class="form-control {% if form.login.errors %}is-invalid{% endif %}"
+                       placeholder="username or email" required autofocus
+                       value="{{ form.login.value|default:'' }}">
+                {% if form.login.errors %}
+                <div class="invalid-feedback">{{ form.login.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="id_password" class="form-label">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" name="password" id="id_password"
+                       class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                       placeholder="Password" required>
+                {% if form.password.errors %}
+                <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary w-100 mb-3" data-loading-text="Signing in...">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Sign in
+            </button>
+
+            <div class="text-end">
+              <a href="{% url 'account_reset_password' %}" class="small text-muted">Forgot password?</a>
+            </div>
+          </form>
+
+          {% load socialaccount %}
+          {% get_providers as socialaccount_providers %}
+          {% if socialaccount_providers %}
+          <div class="text-center">
+            <div class="d-flex align-items-center my-3">
+              <hr class="flex-grow-1">
+              <span class="mx-3 text-muted small">or</span>
+              <hr class="flex-grow-1">
+            </div>
+
+            {% for provider in socialaccount_providers %}
+            <a href="{% provider_login_url provider.id process='login' %}"
+               class="btn btn-outline-secondary w-100 mb-2">
+              {% if provider.id == 'microsoft' %}
+              <i class="bi bi-microsoft me-2"></i>Sign in with Microsoft
+              {% else %}
+              <i class="bi bi-box-arrow-in-right me-2"></i>Sign in with {{ provider.name }}
+              {% endif %}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="text-center">
+            <div class="d-flex align-items-center my-3">
+              <hr class="flex-grow-1">
+              <span class="mx-3 text-muted small">or</span>
+              <hr class="flex-grow-1">
+            </div>
+            <a href="{% url 'mfa_login_webauthn' %}" class="btn btn-outline-secondary w-100">
+              <i class="bi bi-fingerprint me-2"></i>Sign in with a passkey
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-center text-muted mt-3 small">
+        Don't have an account? <a href="{% url 'account_signup' %}">Register</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
