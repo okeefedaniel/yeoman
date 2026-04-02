@@ -1,4 +1,9 @@
-from keel.workflow.registry import register_workflow
+"""
+Yeoman invitation workflow definition.
+
+The workflow is a pure data structure — no dependency on external registries.
+The Invitation model references this directly via get_workflow().
+"""
 
 YEOMAN_INVITATION_WORKFLOW = {
     'name': 'yeoman_invitation',
@@ -82,8 +87,3 @@ STATUS_DISPLAY = {
 
 STATUS_COLORS = {k: v['color'] for k, v in STATUS_DISPLAY.items()}
 STATUS_BORDERS = {k: v['border'] for k, v in STATUS_DISPLAY.items()}
-
-
-def register_yeoman_workflow():
-    """Called from YeomanConfig.ready()."""
-    register_workflow(YEOMAN_INVITATION_WORKFLOW)
