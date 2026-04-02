@@ -736,3 +736,17 @@ footer hr {
     .stat-card .stat-value { font-size: 1.25rem; }
     .table { font-size: 0.85rem; }
 }
+
+/* =============================================
+   Auth Pages — login / register / password-reset
+   ============================================= */
+.login-card,
+.password-reset-card {
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.register-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
