@@ -1,0 +1,42 @@
+{% comment %} djlint:off {% endcomment %}{% load allauth %}
+{% if errors %}
+{% for error in errors %}<div class="alert alert-danger py-2 small">{{ error }}</div>{% endfor %}
+{% endif %}
+<div class="mb-3">
+{% if attrs.type == "checkbox" or attrs.type == "radio" %}
+<div class="form-check">
+<input type="{{ attrs.type }}"
+       class="form-check-input{% if errors %} is-invalid{% endif %}"
+       {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+       {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+       {% if attrs.value %}value="{{ attrs.value }}"{% endif %}
+       {% if attrs.checked %}checked{% endif %}
+       {% if attrs.required %}required{% endif %}
+       {% if attrs.disabled %}disabled{% endif %}>
+{% if attrs.id %}<label class="form-check-label" for="{{ attrs.id }}">{% slot "label" %}{{ attrs.label }}{% endslot %}</label>{% endif %}
+</div>
+{% elif attrs.type == "textarea" %}
+{% if attrs.id %}<label class="form-label" for="{{ attrs.id }}">{% slot "label" %}{{ attrs.label }}{% endslot %}</label>{% endif %}
+<textarea class="form-control{% if errors %} is-invalid{% endif %}"
+          {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+          {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+          {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+          {% if attrs.required %}required{% endif %}
+          {% if attrs.disabled %}disabled{% endif %}
+          {% if attrs.readonly %}readonly{% endif %}
+          {% if attrs.rows %}rows="{{ attrs.rows }}"{% endif %}>{% slot "value" %}{% endslot %}</textarea>
+{% else %}
+{% if attrs.id %}<label class="form-label" for="{{ attrs.id }}">{% slot "label" %}{{ attrs.label }}{% endslot %}</label>{% endif %}
+<input type="{{ attrs.type|default:'text' }}"
+       class="form-control{% if errors %} is-invalid{% endif %}"
+       {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+       {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+       {% if attrs.value %}value="{{ attrs.value }}"{% endif %}
+       {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+       {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+       {% if attrs.required %}required{% endif %}
+       {% if attrs.disabled %}disabled{% endif %}
+       {% if attrs.readonly %}readonly{% endif %}>
+{% endif %}
+{% slot "help_text" %}{% endslot %}
+</div>

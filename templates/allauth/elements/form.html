@@ -1,0 +1,7 @@
+{% comment %} djlint:off {% endcomment %}{% load allauth %}
+<form method="{{ attrs.method }}" {% if attrs.action %}action="{{ attrs.action }}"{% endif %}>
+{% slot "body" %}{% endslot %}
+<div class="d-grid mt-3">
+{% slot "actions" %}{% endslot %}
+</div>
+</form>
