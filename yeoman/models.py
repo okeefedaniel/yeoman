@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
-from keel.core.models import KeelBaseModel, AbstractStatusHistory, AbstractInternalNote
+from keel.core.models import KeelBaseModel, AbstractStatusHistory, AbstractInternalNote, WorkflowModelMixin
 
 
 class InvitationTag(models.Model):
@@ -24,12 +24,13 @@ class InvitationTag(models.Model):
         return self.name
 
 
-class Invitation(KeelBaseModel):
+class Invitation(WorkflowModelMixin, KeelBaseModel):
     """
     The core record. Represents a request for the principal's time.
     Created either via the public intake form or manually by staff.
     """
-    WORKFLOW_NAME = 'yeoman_invitation'
+    from yeoman.workflow import INVITATION_WORKFLOW
+    WORKFLOW = INVITATION_WORKFLOW
 
     agency = models.ForeignKey(
         'keel_accounts.Agency', on_delete=models.CASCADE, related_name='invitations',
@@ -179,19 +180,6 @@ class Invitation(KeelBaseModel):
     @property
     def has_location(self):
         return self.latitude is not None and self.longitude is not None
-
-    def get_available_transitions(self, user=None):
-        """Return Transition objects available from the current state."""
-        from yeoman.workflow import INVITATION_WORKFLOW
-        return INVITATION_WORKFLOW.get_available_transitions(self.status, user)
-
-    def transition(self, target_status, user=None, comment=''):
-        """Execute a workflow transition. Validates state and roles.
-
-        Auto-creates an InvitationStatusHistory record via the engine.
-        """
-        from yeoman.workflow import INVITATION_WORKFLOW
-        return INVITATION_WORKFLOW.execute(self, target_status, user=user, comment=comment)
 
     def save(self, **kwargs):
         # Geocode on save if address present but no coordinates
