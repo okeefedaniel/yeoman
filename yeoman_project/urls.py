@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import include, path
 
+from keel.core.demo import demo_login_view
 from yeoman.forms import LoginForm
 
 urlpatterns = [
@@ -12,6 +13,8 @@ urlpatterns = [
         authentication_form=LoginForm,
     ), name='account_login'),
     path('auth/logout/', LogoutView.as_view(), name='account_logout'),
+    # Demo login (one-click role-based login when DEMO_MODE=True)
+    path('demo-login/', demo_login_view, name='demo_login'),
     # Allauth handles everything else (signup, SSO, MFA, password reset)
     path('auth/', include('allauth.urls')),
     path('', include('yeoman.urls')),
