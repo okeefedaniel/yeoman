@@ -41,7 +41,9 @@ class InvitationListView(LoginRequiredMixin, ListView):
         qs = super().get_queryset().select_related('assigned_to', 'agency')
         # Filters
         status = self.request.GET.get('status')
-        if status:
+        if status == 'needs_attention':
+            qs = qs.filter(status__in=('received', 'needs_info'))
+        elif status:
             qs = qs.filter(status=status)
         priority = self.request.GET.get('priority')
         if priority:
