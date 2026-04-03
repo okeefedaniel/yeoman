@@ -278,6 +278,12 @@ KEEL_NOTIFICATION_MODEL = 'core.Notification'
 KEEL_NOTIFICATION_PREFERENCE_MODEL = 'core.NotificationPreference'
 KEEL_NOTIFICATION_LOG_MODEL = 'core.NotificationLog'
 KEEL_CSP_POLICY = {}
+KEEL_FILE_SCANNING_ENABLED = not DEBUG
+KEEL_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+KEEL_ALLOWED_UPLOAD_EXTENSIONS = [
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+    '.csv', '.txt', '.png', '.jpg', '.jpeg', '.gif',
+]
 
 # Calendar sync (keel.calendar)
 KEEL_CALENDAR_PROVIDER = os.environ.get('KEEL_CALENDAR_PROVIDER', None)  # 'google' or 'microsoft'

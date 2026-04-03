@@ -41,10 +41,13 @@ class PublicInviteView(FormView):
         invitation.status = 'received'
         invitation.save()
 
-        # Handle file attachment
+        # Handle file attachment (validated by Keel FileSecurityValidator)
         attachment = self.request.FILES.get('attachment')
         if attachment:
-            if attachment.size <= 10 * 1024 * 1024:  # 10MB limit
+            from keel.security.scanning import FileSecurityValidator
+            validator = FileSecurityValidator()
+            try:
+                validator(attachment)
                 InvitationAttachment.objects.create(
                     invitation=invitation,
                     file=attachment,
@@ -53,6 +56,8 @@ class PublicInviteView(FormView):
                     size_bytes=attachment.size,
                     uploaded_by_staff=False,
                 )
+            except Exception:
+                pass  # Skip invalid files silently on public form
 
         # Rate limit tracking
         ip = self.request.META.get('HTTP_X_FORWARDED_FOR', self.request.META.get('REMOTE_ADDR', ''))

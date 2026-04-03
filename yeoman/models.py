@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from keel.core.models import KeelBaseModel, AbstractStatusHistory, AbstractInternalNote, WorkflowModelMixin
+from keel.security.scanning import FileSecurityValidator
 
 
 class InvitationTag(models.Model):
@@ -195,7 +196,10 @@ class InvitationAttachment(models.Model):
     invitation = models.ForeignKey(
         Invitation, on_delete=models.CASCADE, related_name='attachments',
     )
-    file = models.FileField(upload_to='invitation_attachments/%Y/%m/')
+    file = models.FileField(
+        upload_to='invitation_attachments/%Y/%m/',
+        validators=[FileSecurityValidator()],
+    )
     original_filename = models.CharField(max_length=500)
     content_type = models.CharField(max_length=100, blank=True)
     size_bytes = models.PositiveIntegerField(default=0)
