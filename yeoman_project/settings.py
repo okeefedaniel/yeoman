@@ -248,6 +248,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_ADAPTER = 'keel.core.sso.KeelAccountAdapter'
 
 _MSFT_TENANT = os.environ.get('MICROSOFT_TENANT_ID', 'common')
 SOCIALACCOUNT_PROVIDERS = {
@@ -268,6 +269,7 @@ MFA_TOTP_ISSUER = 'Yeoman'
 MFA_PASSKEY_LOGIN_ENABLED = True
 
 # Keel
+KEEL_GATE_ACCESS = True
 KEEL_PRODUCT_NAME = 'Yeoman'
 KEEL_PRODUCT_ICON = 'bi-calendar2-week'
 KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
