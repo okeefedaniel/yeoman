@@ -133,39 +133,40 @@
   </main>
 
   <!-- Footer -->
-  <footer class="mt-5" style="background-color: var(--ct-dark-blue); color: #ccc; font-size: 0.85rem;">
-    <div class="container py-4">
+  <footer class="bg-dark text-light py-4 mt-auto" role="contentinfo">
+    <div class="container">
       <div class="row">
-        <div class="col-md-5 mb-3 mb-md-0">
-          <h6 class="text-white fw-bold">
-            <i class="bi bi-calendar2-week me-1"></i> Yeoman
-          </h6>
-          <p class="mb-1">Event Scheduling &amp; Invitation Workflow</p>
-          <p class="mb-0">Part of the DockLabs suite</p>
+        <div class="col-md-6">
+          <h6 class="fw-bold"><i class="bi bi-calendar2-week me-2"></i>Yeoman</h6>
+          <p class="small text-muted mb-0">
+            Event Scheduling &amp; Invitation Workflow<br>
+            Part of the DockLabs suite
+          </p>
         </div>
-        <div class="col-md-3 mb-3 mb-md-0">
-          <h6 class="text-white fw-bold">Quick Links</h6>
-          <ul class="list-unstyled mb-0">
-            <li><a href="/" class="text-decoration-none" style="color: #ccc;">Home</a></li>
-            <li><a href="#" class="text-decoration-none" style="color: #ccc;">Help &amp; FAQ</a></li>
-            <li><a href="#" class="text-decoration-none" style="color: #ccc;">Support</a></li>
+        <div class="col-md-3">
+          <h6 class="fw-bold">Quick Links</h6>
+          <ul class="list-unstyled small">
+            <li><a href="/" class="text-muted text-decoration-none">Home</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Help &amp; FAQ</a></li>
+            <li><a href="#" class="text-muted text-decoration-none">Support</a></li>
           </ul>
         </div>
-        <div class="col-md-4">
-          <h6 class="text-white fw-bold">Contact</h6>
-          <ul class="list-unstyled mb-0">
-            <li><i class="bi bi-envelope me-1"></i><a href="mailto:info@docklabs.ai" class="text-decoration-none" style="color: #ccc;">info@docklabs.ai</a></li>
+        <div class="col-md-3">
+          <h6 class="fw-bold">Contact</h6>
+          <ul class="list-unstyled small text-muted">
+            <li><a href="mailto:info@docklabs.ai" class="text-muted text-decoration-none"><i class="bi bi-envelope me-1"></i> info@docklabs.ai</a></li>
           </ul>
         </div>
       </div>
-    </div>
-    <div class="border-top" style="border-color: rgba(255,255,255,0.1) !important;">
-      <div class="container py-3 d-flex flex-wrap justify-content-between align-items-center" style="font-size: 0.8rem;">
-        <span>&copy; {{ CURRENT_YEAR }} DockLabs. All rights reserved.</span>
-        <span>
-          <a href="#" class="text-decoration-none me-3" style="color: #ccc;">Privacy Policy</a>
-          <a href="#" class="text-decoration-none" style="color: #ccc;">Terms of Service</a>
-        </span>
+      <hr class="my-3 border-secondary">
+      <div class="d-flex justify-content-between align-items-center">
+        <p class="text-muted small mb-0">
+          &copy; {% now "Y" %} DockLabs. All rights reserved.
+        </p>
+        <p class="small mb-0">
+          <a href="#" class="text-muted text-decoration-none me-3">Privacy Policy</a>
+          <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
+        </p>
       </div>
     </div>
   </footer>
