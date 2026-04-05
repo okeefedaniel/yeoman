@@ -271,7 +271,7 @@ MFA_PASSKEY_LOGIN_ENABLED = True
 
 # Keel
 KEEL_GATE_ACCESS = True
-KEEL_PRODUCT_NAME = 'yeoman'
+KEEL_PRODUCT_NAME = 'Yeoman'
 KEEL_PRODUCT_ICON = 'bi-calendar2-week'
 KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
 KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
