@@ -101,6 +101,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'keel.core.context_processors.site_context',
+                'keel.core.context_processors.fleet_context',
             ],
         },
     },
@@ -271,6 +272,14 @@ MFA_PASSKEY_LOGIN_ENABLED = True
 
 # Keel
 KEEL_GATE_ACCESS = True
+KEEL_PRODUCT_CODE = 'yeoman'
+KEEL_FLEET_PRODUCTS = [
+    {'name': 'Helm', 'label': 'Helm', 'code': 'helm', 'url': '/'},
+    {'name': 'Beacon', 'label': 'Beacon', 'code': 'beacon', 'url': '/'},
+    {'name': 'Harbor', 'label': 'Harbor', 'code': 'harbor', 'url': '/'},
+    {'name': 'Bounty', 'label': 'Bounty', 'code': 'bounty', 'url': '/'},
+    {'name': 'Lookout', 'label': 'Lookout', 'code': 'lookout', 'url': '/'},
+]
 KEEL_PRODUCT_NAME = 'Yeoman'
 KEEL_PRODUCT_ICON = 'bi-calendar2-week'
 KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
