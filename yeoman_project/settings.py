@@ -285,10 +285,10 @@ KEEL_PRODUCT_ICON = 'bi-calendar2-week'
 KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
 KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
 KEEL_API_KEY = os.environ.get('KEEL_API_KEY', '')
-KEEL_AUDIT_LOG_MODEL = 'core.AuditLog'
-KEEL_NOTIFICATION_MODEL = 'core.Notification'
-KEEL_NOTIFICATION_PREFERENCE_MODEL = 'core.NotificationPreference'
-KEEL_NOTIFICATION_LOG_MODEL = 'core.NotificationLog'
+KEEL_AUDIT_LOG_MODEL = 'yeoman_core.AuditLog'
+KEEL_NOTIFICATION_MODEL = 'yeoman_core.Notification'
+KEEL_NOTIFICATION_PREFERENCE_MODEL = 'yeoman_core.NotificationPreference'
+KEEL_NOTIFICATION_LOG_MODEL = 'yeoman_core.NotificationLog'
 KEEL_CSP_POLICY = {}
 KEEL_FILE_SCANNING_ENABLED = not DEBUG
 KEEL_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
@@ -299,8 +299,8 @@ KEEL_ALLOWED_UPLOAD_EXTENSIONS = [
 
 # Calendar sync (keel.calendar)
 KEEL_CALENDAR_PROVIDER = os.environ.get('KEEL_CALENDAR_PROVIDER', None)  # 'google' or 'microsoft'
-KEEL_CALENDAR_EVENT_MODEL = 'core.CalendarEvent'
-KEEL_CALENDAR_SYNC_LOG_MODEL = 'core.CalendarSyncLog'
+KEEL_CALENDAR_EVENT_MODEL = 'yeoman_core.CalendarEvent'
+KEEL_CALENDAR_SYNC_LOG_MODEL = 'yeoman_core.CalendarSyncLog'
 
 # Yeoman-specific
 GOOGLE_GEOCODING_API_KEY = os.environ.get('GOOGLE_GEOCODING_API_KEY', '')
