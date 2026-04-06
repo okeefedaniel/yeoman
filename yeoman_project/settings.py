@@ -207,6 +207,14 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
+# Suite mode: shared session cookie across *.docklabs.ai
+KEEL_SUITE_DOMAIN = os.environ.get('KEEL_SUITE_DOMAIN')
+if KEEL_SUITE_DOMAIN:
+    SESSION_COOKIE_DOMAIN = KEEL_SUITE_DOMAIN
+    SESSION_COOKIE_NAME = 'docklabs_sessionid'
+    CSRF_COOKIE_DOMAIN = KEEL_SUITE_DOMAIN
+    CSRF_COOKIE_NAME = 'docklabs_csrftoken'
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = False  # Railway handles SSL termination
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
