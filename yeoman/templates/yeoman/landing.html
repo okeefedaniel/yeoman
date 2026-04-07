@@ -1,0 +1,22 @@
+{% extends "keel/layouts/landing.html" %}
+{% load static %}
+
+{% block landing_hero_description %}
+Event scheduling and invitation workflow management for state agencies.
+Yeoman handles public hearings, stakeholder events, and meeting coordination
+with calendar sync, map visualization, and full invitation lifecycle tracking.
+{% endblock %}
+
+{% block dashboard_url %}{% url 'yeoman:dashboard' %}{% endblock %}
+
+{% block landing_stats %}
+{% include "keel/landing/_stats_bar.html" with stats=landing_stats %}
+{% endblock %}
+
+{% block landing_features %}
+{% include "keel/landing/_features.html" with title="Built for Public Engagement" features=landing_features %}
+{% endblock %}
+
+{% block landing_how_it_works %}
+{% include "keel/landing/_how_it_works.html" with steps=landing_steps %}
+{% endblock %}

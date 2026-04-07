@@ -1,6 +1,8 @@
 from django.urls import path
 from django.views.generic import RedirectView, TemplateView
 
+from keel.core.views import LandingView
+
 from yeoman.views import (
     DashboardView,
     InvitationListView,
@@ -25,8 +27,34 @@ from yeoman.views.ical import invitation_ical
 app_name = 'yeoman'
 
 urlpatterns = [
-    # Home → dashboard
-    path('', RedirectView.as_view(url='/dashboard/', permanent=False)),
+    # Public landing page (root) — redirects authenticated users to dashboard
+    path('', LandingView.as_view(
+        template_name='yeoman/landing.html',
+        authenticated_redirect='yeoman:dashboard',
+        stats=[
+            {'value': 'Calendar', 'label': 'Sync'},
+            {'value': 'iCal', 'label': 'Export'},
+            {'value': 'Multi-event', 'label': 'Workflows'},
+            {'value': 'Public', 'label': 'Intake'},
+        ],
+        features=[
+            {'icon': 'bi-calendar2-week', 'title': 'Event Scheduling',
+             'description': 'Manage public hearings, agency events, and stakeholder meetings with full calendar integration.',
+             'color': 'blue'},
+            {'icon': 'bi-people', 'title': 'Invitation Workflow',
+             'description': 'Track invitations from intake to completion with status transitions, delegation, and notes.',
+             'color': 'teal'},
+            {'icon': 'bi-geo-alt', 'title': 'Map View',
+             'description': 'Visualize events geographically with location markers and clustering for regional planning.',
+             'color': 'yellow'},
+        ],
+        steps=[
+            {'title': 'Receive Invitation', 'description': 'Public submits an invitation via the intake form.'},
+            {'title': 'Triage', 'description': 'Staff claim, delegate, or transition invitations through the workflow.'},
+            {'title': 'Schedule', 'description': 'Confirmed invitations sync to calendars with iCal export.'},
+            {'title': 'Report', 'description': 'Run reports on event activity, response times, and outcomes.'},
+        ],
+    ), name='landing'),
 
     # Staff dashboard
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
