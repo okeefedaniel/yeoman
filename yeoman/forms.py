@@ -4,26 +4,10 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Row, Column, Submit, HTML
 
 from yeoman.models import Invitation
+from keel.accounts.forms import LoginForm  # noqa: F401
 
 
-class LoginForm(AuthenticationForm):
-    """Styled login form with Bootstrap classes."""
-
-    username = forms.CharField(
-        label='Username or email',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Username or email',
-            'autofocus': True,
-        }),
-    )
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Password',
-        }),
-    )
-
+# LoginForm is now shared in Keel for suite-wide consistency.
 
 class InvitationStaffForm(forms.ModelForm):
     """Staff form for editing invitation workflow fields."""
