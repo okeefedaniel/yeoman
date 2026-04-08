@@ -61,29 +61,33 @@
     </div>
     <div class="col-sm-6 col-xl-3">
       {% if overdue_count %}
-      <div class="card stat-card accent-red h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="stat-value">{{ overdue_count }}</div>
-              <div class="stat-label">Overdue</div>
+      <a href="{% url 'yeoman:invitation_list' %}?filter=overdue" class="text-decoration-none">
+        <div class="card stat-card accent-red h-100 stat-card-link">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="stat-value">{{ overdue_count }}</div>
+                <div class="stat-label">Overdue</div>
+              </div>
+              <i class="bi bi-alarm fs-3 text-muted opacity-50"></i>
             </div>
-            <i class="bi bi-alarm fs-3 text-muted opacity-50"></i>
           </div>
         </div>
-      </div>
+      </a>
       {% else %}
-      <div class="card stat-card h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="stat-value">{{ total_count }}</div>
-              <div class="stat-label">Total Invitations</div>
+      <a href="{% url 'yeoman:invitation_list' %}" class="text-decoration-none">
+        <div class="card stat-card h-100 stat-card-link">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="stat-value">{{ total_count }}</div>
+                <div class="stat-label">Total Invitations</div>
+              </div>
+              <i class="bi bi-envelope-open fs-3 text-muted opacity-50"></i>
             </div>
-            <i class="bi bi-envelope-open fs-3 text-muted opacity-50"></i>
           </div>
         </div>
-      </div>
+      </a>
       {% endif %}
     </div>
   </div>

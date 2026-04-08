@@ -40,6 +40,13 @@ class InvitationListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = super().get_queryset().select_related('assigned_to', 'agency')
         # Filters
+        filter_type = self.request.GET.get('filter')
+        if filter_type == 'overdue':
+            from datetime import date
+            from yeoman.views.dashboard import TERMINAL_STATUSES
+            qs = qs.filter(event_date__lt=date.today()).exclude(
+                status__in=TERMINAL_STATUSES,
+            )
         status = self.request.GET.get('status')
         if status == 'needs_attention':
             qs = qs.filter(status__in=('received', 'needs_info'))
