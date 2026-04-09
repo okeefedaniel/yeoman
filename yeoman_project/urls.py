@@ -5,6 +5,7 @@ from django.urls import include, path
 from keel.core.demo import demo_login_view
 from keel.core.views import SuiteLogoutView
 from keel.core.search_views import search_view
+from yeoman.helm_feed import yeoman_helm_feed
 from yeoman.forms import LoginForm
 
 urlpatterns = [
@@ -19,6 +20,8 @@ urlpatterns = [
     path('demo-login/', demo_login_view, name='demo_login'),
     # Allauth handles everything else (signup, SSO, MFA, password reset)
     path('auth/', include('allauth.urls')),
+    # Helm executive dashboard feed
+    path('api/v1/helm-feed/', yeoman_helm_feed, name='helm-feed'),
     path('', include('yeoman.urls')),
     path('search/', search_view, name='search'),
 ]

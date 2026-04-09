@@ -321,6 +321,7 @@ KEEL_PRODUCT_ICON = 'bi-calendar2-week'
 KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
 KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
 KEEL_API_KEY = os.environ.get('KEEL_API_KEY', '')
+HELM_FEED_API_KEY = os.environ.get('HELM_FEED_API_KEY', '')
 KEEL_AUDIT_LOG_MODEL = 'yeoman_core.AuditLog'
 KEEL_NOTIFICATION_MODEL = 'yeoman_core.Notification'
 KEEL_NOTIFICATION_PREFERENCE_MODEL = 'yeoman_core.NotificationPreference'
