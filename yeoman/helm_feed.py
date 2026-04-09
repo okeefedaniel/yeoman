@@ -96,7 +96,7 @@ def yeoman_helm_feed(request):
         action_items.append({
             'id': f'yeoman-triage-{inv.pk}',
             'type': 'review',
-            'title': f'Triage: {inv.title[:80]}',
+            'title': f'Triage: {inv.event_name[:80]}',
             'description': f'Event: {inv.event_date.strftime("%b %d") if inv.event_date else "TBD"}',
             'priority': 'medium' if not inv.event_date or inv.event_date > now.date() + timedelta(days=3) else 'high',
             'due_date': inv.event_date.isoformat() if inv.event_date else '',
