@@ -4,6 +4,7 @@ from django.urls import include, path
 
 from keel.core.demo import demo_login_view
 from keel.core.views import SuiteLogoutView
+from keel.core.search_views import search_view
 from yeoman.forms import LoginForm
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     # Allauth handles everything else (signup, SSO, MFA, password reset)
     path('auth/', include('allauth.urls')),
     path('', include('yeoman.urls')),
+    path('search/', search_view, name='search'),
 ]
