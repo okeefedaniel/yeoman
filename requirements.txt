@@ -24,4 +24,4 @@ markdown>=3.7,<4.0
 Pillow>=10.4,<12.0
 
 # DockLabs Shared Platform
-keel @ git+https://github.com/okeefedaniel/keel.git@27f8586b95d4b8e03f611812986d3ed4adf2eaee
+keel @ git+https://github.com/okeefedaniel/keel.git@fd94cbf3964ccef40f9a2c3581495f2b6154711d
