@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.views import LoginView
 from django.urls import include, path
 
+from django.views.generic import TemplateView
+
 from keel.core.demo import demo_login_view
 from keel.core.views import SuiteLogoutView
 from keel.core.search_views import search_view
@@ -9,6 +11,8 @@ from yeoman.helm_feed import yeoman_helm_feed
 from yeoman.forms import LoginForm
 
 urlpatterns = [
+    # Support (shared keel page — linked from 500.html)
+    path('support/', TemplateView.as_view(template_name='keel/support.html'), name='support'),
     path('admin/', admin.site.urls),
     # Custom login/logout views to use our styled templates (before allauth)
     path('auth/login/', LoginView.as_view(
