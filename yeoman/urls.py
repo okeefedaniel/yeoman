@@ -21,6 +21,7 @@ from yeoman.views import (
     map_markers_json,
     ReportsDashboardView,
     InvitationExportView,
+    PrincipalSettingsView,
 )
 from yeoman.views.ical import invitation_ical
 
@@ -86,4 +87,7 @@ urlpatterns = [
     # Reports
     path('reports/', ReportsDashboardView.as_view(), name='reports'),
     path('reports/export/', InvitationExportView.as_view(), name='reports_export'),
+
+    # Settings
+    path('settings/principal/', PrincipalSettingsView.as_view(), name='principal_settings'),
 ]

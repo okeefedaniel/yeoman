@@ -13,3 +13,4 @@ from .public import PublicInviteView, InvitationStatusView
 from .calendar_view import CalendarView, calendar_events_json
 from .map_view import MapView, map_markers_json
 from .reports import ReportsDashboardView, InvitationExportView
+from .settings import PrincipalSettingsView

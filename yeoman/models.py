@@ -238,6 +238,61 @@ class InvitationNote(AbstractInternalNote):
     )
 
 
+class PrincipalProfile(models.Model):
+    """The principal whose time is being scheduled.
+
+    One per agency. Stores identity info and reference addresses
+    used for driving-distance calculations on incoming invitations.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    agency = models.OneToOneField(
+        'keel_accounts.Agency', on_delete=models.CASCADE, related_name='principal_profile',
+    )
+    display_name = models.CharField(max_length=255, help_text="e.g. Commissioner O'Keefe")
+    title = models.CharField(max_length=255, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Principal Profile'
+
+    def __str__(self):
+        return f"{self.display_name} ({self.agency.abbreviation})"
+
+
+class ReferenceAddress(models.Model):
+    """A named location used for distance calculations.
+
+    Flexible — could be "Home", "Office", "Hartford Capitol", etc.
+    Distances from each address are computed when an invitation arrives.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    profile = models.ForeignKey(
+        PrincipalProfile, on_delete=models.CASCADE, related_name='addresses',
+    )
+    label = models.CharField(max_length=100, help_text="e.g. Home, Office, Capitol")
+    address = models.TextField()
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+    )
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True,
+    )
+    is_default = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'label']
+        verbose_name = 'Reference Address'
+        verbose_name_plural = 'Reference Addresses'
+
+    def __str__(self):
+        return f"{self.label}: {self.address[:50]}"
+
+
 class DelegationLog(models.Model):
     """Tracks the full delegation history of an invitation. Immutable."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Principal Settings{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1"><i class="bi bi-person-gear me-2"></i>Principal Settings</h2>
+      <p class="text-muted mb-0">Configure the principal's profile and reference addresses for distance calculations.</p>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title mb-0"><i class="bi bi-person me-2"></i>Principal</h5>
+      </div>
+      <div class="card-body">
+        {% crispy form %}
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="bi bi-geo-alt me-2"></i>Reference Addresses</h5>
+        <small class="text-muted">Distances from these locations are calculated for incoming invitations.</small>
+      </div>
+      <div class="card-body">
+        {{ formset.management_form }}
+
+        <table class="table table-borderless align-middle" id="address-table">
+          <thead>
+            <tr>
+              <th style="width: 20%">Label</th>
+              <th>Address</th>
+              <th style="width: 8%" class="text-center">Default</th>
+              <th style="width: 8%" class="text-center">Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for addr_form in formset %}
+              <tr class="address-row {% if addr_form.instance.pk %}{% else %}{% if not forloop.last %}d-none{% endif %}{% endif %}">
+                <td>
+                  {{ addr_form.id }}
+                  {{ addr_form.sort_order }}
+                  <input type="text" name="{{ addr_form.label.html_name }}" value="{{ addr_form.label.value|default_if_none:'' }}"
+                         class="form-control form-control-sm" placeholder="e.g. Home, Office">
+                </td>
+                <td>
+                  <input type="text" name="{{ addr_form.address.html_name }}" value="{{ addr_form.address.value|default_if_none:'' }}"
+                         class="form-control form-control-sm" placeholder="Full address">
+                </td>
+                <td class="text-center">
+                  <input type="checkbox" name="{{ addr_form.is_default.html_name }}"
+                         {% if addr_form.is_default.value %}checked{% endif %}
+                         class="form-check-input">
+                </td>
+                <td class="text-center">
+                  {% if addr_form.instance.pk %}
+                    <input type="checkbox" name="{{ addr_form.DELETE.html_name }}"
+                           class="form-check-input text-danger">
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if formset.non_form_errors %}
+          <div class="text-danger small mt-2">
+            {% for error in formset.non_form_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-1"></i>Save Settings
+      </button>
+      <a href="{% url 'yeoman:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

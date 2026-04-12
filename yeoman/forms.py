@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Row, Column, Submit, HTML
 
-from yeoman.models import Invitation
+from yeoman.models import Invitation, PrincipalProfile, ReferenceAddress
 from keel.accounts.forms import LoginForm  # noqa: F401
 
 
@@ -186,3 +186,54 @@ class PublicInvitationForm(forms.ModelForm):
             ),
             Submit('submit', 'Submit Invitation', css_class='btn btn-primary btn-lg w-100'),
         )
+
+
+class PrincipalProfileForm(forms.ModelForm):
+    """Form for editing the principal's identity and info."""
+
+    class Meta:
+        model = PrincipalProfile
+        fields = ['display_name', 'title', 'email', 'phone', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False  # rendered inside outer <form>
+        self.helper.layout = Layout(
+            Fieldset(
+                'Principal',
+                Row(
+                    Column('display_name', css_class='col-md-6'),
+                    Column('title', css_class='col-md-6'),
+                ),
+                Row(
+                    Column('email', css_class='col-md-6'),
+                    Column('phone', css_class='col-md-6'),
+                ),
+                'notes',
+            ),
+        )
+
+
+class ReferenceAddressForm(forms.ModelForm):
+    """Inline form for a single reference address."""
+
+    class Meta:
+        model = ReferenceAddress
+        fields = ['label', 'address', 'is_default', 'sort_order']
+        widgets = {
+            'address': forms.TextInput(attrs={'placeholder': 'Full address'}),
+            'sort_order': forms.HiddenInput(),
+        }
+
+
+ReferenceAddressFormSet = forms.inlineformset_factory(
+    PrincipalProfile,
+    ReferenceAddress,
+    form=ReferenceAddressForm,
+    extra=1,
+    can_delete=True,
+)

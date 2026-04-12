@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     DelegationLog, Invitation, InvitationAttachment, InvitationNote,
-    InvitationStatusHistory, InvitationTag,
+    InvitationStatusHistory, InvitationTag, PrincipalProfile, ReferenceAddress,
 )
 
 
@@ -132,3 +132,17 @@ class DelegationLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+class ReferenceAddressInline(admin.TabularInline):
+    model = ReferenceAddress
+    extra = 1
+    fields = ('label', 'address', 'is_default', 'sort_order', 'latitude', 'longitude')
+    readonly_fields = ('latitude', 'longitude')
+
+
+@admin.register(PrincipalProfile)
+class PrincipalProfileAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'title', 'agency', 'updated_at')
+    readonly_fields = ('id', 'created_at', 'updated_at')
+    inlines = [ReferenceAddressInline]
