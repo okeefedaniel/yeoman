@@ -6,8 +6,9 @@ import random
 from datetime import date, time, timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from keel.accounts.models import Agency, ProductAccess
 from yeoman.models import Invitation, InvitationTag
@@ -24,7 +25,19 @@ ROLE_DELEGATE = 'yeoman_delegate'
 class Command(BaseCommand):
     help = 'Seed Yeoman with demo agency, users, tags, and sample invitations.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Run even when DEMO_MODE is disabled (dangerous; never use on prod).',
+        )
+
     def handle(self, *args, **options):
+        if not settings.DEMO_MODE and not options['force']:
+            raise CommandError(
+                'seed_data refuses to run because DEMO_MODE is not enabled. '
+                'Set DEMO_MODE=True (demo instance) or pass --force to override.'
+            )
         self.stdout.write("Seeding Yeoman data...\n")
 
         # 1. Agency
