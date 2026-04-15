@@ -129,6 +129,12 @@ class PublicInvitationForm(forms.ModelForm):
         self.helper.form_class = 'needs-validation'
         self.helper.attrs = {'novalidate': ''}
         self.helper.layout = Layout(
+            HTML(
+                '<div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">'
+                '<label for="id_website">Website</label>'
+                '<input type="text" name="website" id="id_website" tabindex="-1" autocomplete="off">'
+                '</div>'
+            ),
             Fieldset(
                 'Your Information',
                 Row(
@@ -184,8 +190,10 @@ class PublicInvitationForm(forms.ModelForm):
                 ),
                 'attachment',
             ),
-            Submit('submit', 'Submit Invitation', css_class='btn btn-primary btn-lg w-100'),
         )
+        # Submit button and Turnstile widget rendered in the template so the
+        # widget appears above the button.
+        self.helper.form_tag = False
 
 
 class PrincipalProfileForm(forms.ModelForm):

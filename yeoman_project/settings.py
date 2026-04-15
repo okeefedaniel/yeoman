@@ -324,6 +324,11 @@ KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
 KEEL_API_KEY = os.environ.get('KEEL_API_KEY', '')
 HELM_FEED_API_KEY = os.environ.get('HELM_FEED_API_KEY', '')
 YEOMAN_INTAKE_API_KEY = os.environ.get('YEOMAN_INTAKE_API_KEY', '')
+
+# Cloudflare Turnstile (spam protection on public /invite/ form)
+# Leave blank to disable verification.
+TURNSTILE_SITE_KEY = os.environ.get('TURNSTILE_SITE_KEY', '')
+TURNSTILE_SECRET_KEY = os.environ.get('TURNSTILE_SECRET_KEY', '')
 KEEL_AUDIT_LOG_MODEL = 'yeoman_core.AuditLog'
 KEEL_NOTIFICATION_MODEL = 'yeoman_core.Notification'
 KEEL_NOTIFICATION_PREFERENCE_MODEL = 'yeoman_core.NotificationPreference'

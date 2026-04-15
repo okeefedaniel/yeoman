@@ -19,6 +19,11 @@
           <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
             {% crispy form %}
+            {% if turnstile_site_key %}
+            <div class="cf-turnstile my-3" data-sitekey="{{ turnstile_site_key }}"></div>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-lg w-100">Submit Invitation</button>
           </form>
         </div>
       </div>

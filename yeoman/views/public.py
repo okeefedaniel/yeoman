@@ -1,6 +1,9 @@
+import logging
+
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView, DetailView
@@ -13,15 +16,60 @@ from yeoman.models import Invitation, InvitationAttachment
 from yeoman.workflow import STATUS_DISPLAY
 
 
+logger = logging.getLogger(__name__)
+
+
+def _client_ip(request):
+    ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+    return ip.split(',')[0].strip() if ip else ''
+
+
+def _is_spam(request):
+    """Return True if submission looks like spam.
+
+    Checks honeypot `website` field and Cloudflare Turnstile token.
+    Fails open on Turnstile network errors. Returns False when no secret
+    is configured (dev/local).
+    """
+    ip = _client_ip(request)
+
+    if request.POST.get('website', '').strip():
+        logger.warning(f"Yeoman spam blocked (honeypot) from {ip}")
+        return True
+
+    secret = getattr(settings, 'TURNSTILE_SECRET_KEY', '')
+    if not secret:
+        return False
+
+    token = request.POST.get('cf-turnstile-response', '')
+    if not token:
+        logger.warning(f"Yeoman spam blocked (missing Turnstile token) from {ip}")
+        return True
+
+    try:
+        import requests
+        resp = requests.post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            data={'secret': secret, 'response': token, 'remoteip': ip},
+            timeout=5,
+        )
+        if not resp.json().get('success', False):
+            logger.warning(f"Yeoman spam blocked (Turnstile failed) from {ip}")
+            return True
+    except Exception as e:
+        logger.error(f"Turnstile verify error (failing open): {e}")
+        return False
+
+    return False
+
+
 class PublicInviteView(FormView):
     template_name = 'yeoman/public_invite.html'
     form_class = PublicInvitationForm
 
     def dispatch(self, request, *args, **kwargs):
         # Simple IP-based rate limiting
-        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
-        if ',' in ip:
-            ip = ip.split(',')[0].strip()
+        ip = _client_ip(request)
         cache_key = f'yeoman_invite_rate_{ip}'
         count = cache.get(cache_key, 0)
         limit = getattr(settings, 'YEOMAN_PUBLIC_FORM_RATE_LIMIT', '10/h')
@@ -29,7 +77,18 @@ class PublicInviteView(FormView):
         if count >= max_count:
             messages.error(request, 'Too many submissions. Please try again later.')
             return self.render_to_response(self.get_context_data())
+
+        # Spam check on POST (honeypot + Turnstile). Silently redirect to the
+        # success page so bots don't retry.
+        if request.method == 'POST' and _is_spam(request):
+            return HttpResponseRedirect(reverse('yeoman:invite_success'))
+
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['turnstile_site_key'] = getattr(settings, 'TURNSTILE_SITE_KEY', '')
+        return ctx
 
     def form_valid(self, form):
         invitation = form.save(commit=False)
