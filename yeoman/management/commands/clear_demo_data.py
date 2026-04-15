@@ -72,12 +72,12 @@ class Command(BaseCommand):
                     t.delete()
 
             demo_users = User.objects.filter(username__in=DEMO_USERNAMES)
-            self.stdout.write(f"  Demo users: {demo_users.count()}")
+            self.stdout.write(f"  Demo users (will deactivate): {demo_users.count()}")
             for u in demo_users:
                 self.stdout.write(f"    - {u.username} ({u.email})")
             if apply:
-                ProductAccess.objects.filter(user__in=demo_users).delete()
-                demo_users.delete()
+                ProductAccess.objects.filter(user__in=demo_users).update(is_active=False)
+                demo_users.update(is_active=False)
 
             if not apply:
                 transaction.set_rollback(True)
