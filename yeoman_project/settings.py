@@ -203,7 +203,7 @@ LOGGING = {
 }
 
 # Security
-SESSION_COOKIE_AGE = 3600
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days (pre-gov-launch; tighten before go-live)
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
@@ -324,6 +324,11 @@ KEEL_API_URL = os.environ.get('KEEL_API_URL', 'https://keel.docklabs.ai')
 KEEL_API_KEY = os.environ.get('KEEL_API_KEY', '')
 HELM_FEED_API_KEY = os.environ.get('HELM_FEED_API_KEY', '')
 YEOMAN_INTAKE_API_KEY = os.environ.get('YEOMAN_INTAKE_API_KEY', '')
+
+# Beacon (CRM) integration — optional. When both are set, the
+# invitation detail page exposes an "Add to Beacon" toggle.
+BEACON_INTAKE_URL = os.environ.get('BEACON_INTAKE_URL', '')
+BEACON_INTAKE_API_KEY = os.environ.get('BEACON_INTAKE_API_KEY', '')
 
 # Cloudflare Turnstile (spam protection on public /invite/ form)
 # Leave blank to disable verification.

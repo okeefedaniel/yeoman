@@ -19,7 +19,7 @@
           <div class="row g-3">
             <div class="col-md-6">
               <div class="small text-muted text-uppercase">Event Date</div>
-              <div>{{ invitation.event_date|date:"l, M d, Y" }}</div>
+              <div>{{ invitation.event_date|date:"l, M d, Y"|default:"To be confirmed" }}</div>
             </div>
             <div class="col-md-6">
               <div class="small text-muted text-uppercase">Time</div>

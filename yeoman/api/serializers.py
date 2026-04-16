@@ -31,11 +31,18 @@ MODALITY_MAP = {
 
 
 class InvitationIntakeSerializer(serializers.Serializer):
-    """Validates and normalises data from the dokeefect.com Invite form."""
+    """Validates and normalises data from the dokeefect.com Invite form.
 
-    # Submitter
-    first_name = serializers.CharField(max_length=128)
-    last_name = serializers.CharField(max_length=128)
+    Required: identity (name + email) and event_type. Everything else —
+    date, time, venue, modality, event_name — is optional so submitters
+    with "anytime this spring, you pick" requests aren't blocked.
+    """
+
+    # Submitter. Accept either split first/last OR a combined "name"
+    # which is split on the last whitespace.
+    first_name = serializers.CharField(max_length=128, required=False, default='')
+    last_name = serializers.CharField(max_length=128, required=False, default='')
+    name = serializers.CharField(max_length=256, required=False, default='')
     email = serializers.EmailField()
     organization = serializers.CharField(max_length=255, required=False, default='')
 
@@ -45,7 +52,9 @@ class InvitationIntakeSerializer(serializers.Serializer):
     start_time = serializers.TimeField(required=False, allow_null=True, default=None)
     end_time = serializers.TimeField(required=False, allow_null=True, default=None)
 
-    # Type / format
+    # Type / format. event_type is our one required triage field — we
+    # need to know whether it's a keynote, a panel, a ribbon-cutting,
+    # etc. before routing. "other" is the escape hatch.
     event_type = serializers.CharField(max_length=50)
     event_format = serializers.CharField(max_length=50, required=False, default='in_person')
 
@@ -97,3 +106,25 @@ class InvitationIntakeSerializer(serializers.Serializer):
         if v in ('no', 'false', '0'):
             return 'no'
         return 'unknown'
+
+    def validate(self, data):
+        """Merge the convenience `name` field into first_name/last_name.
+
+        If the caller sent a combined "name", split on the last space so
+        "Jane Q Public" → ("Jane Q", "Public"). Then require at least
+        first_name (last_name may be blank for one-word names).
+        """
+        combined = (data.pop('name', '') or '').strip()
+        if combined and not data.get('first_name') and not data.get('last_name'):
+            parts = combined.rsplit(' ', 1)
+            if len(parts) == 2:
+                data['first_name'], data['last_name'] = parts[0], parts[1]
+            else:
+                data['first_name'], data['last_name'] = combined, ''
+
+        if not data.get('first_name'):
+            raise serializers.ValidationError({
+                'name': 'A submitter name is required (send `name` or '
+                        '`first_name`+`last_name`).',
+            })
+        return data

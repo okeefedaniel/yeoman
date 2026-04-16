@@ -104,26 +104,22 @@ def invitation_intake(request):
     if not agency:
         agency = Agency.objects.create(name='Default Agency', abbreviation='DEFAULT')
 
-    # Build event name from submitter + org if not provided
-    event_name = d.get('event_name') or ''
-    if not event_name:
-        parts = [f"{d['first_name']} {d['last_name']}"]
-        if d.get('organization'):
-            parts.append(f"@ {d['organization']}")
-        event_name = ' '.join(parts)
-
+    # event_name / event_date / event_time_start are intentionally
+    # optional. Leave event_name blank here — Invitation.save() fills a
+    # derived default so the list view has something to show. Dates
+    # are left as NULL when not provided; detail/list views render "TBD".
     invitation = Invitation(
         agency=agency,
         status='received',
         # Submitter
         submitter_first_name=d['first_name'],
-        submitter_last_name=d['last_name'],
+        submitter_last_name=d.get('last_name', ''),
         submitter_email=d['email'],
         submitter_organization=d.get('organization', ''),
         # Event
-        event_name=event_name,
-        event_date=d.get('event_date') or timezone.now().date(),
-        event_time_start=d.get('start_time') or timezone.now().time().replace(second=0, microsecond=0),
+        event_name=d.get('event_name', ''),
+        event_date=d.get('event_date'),
+        event_time_start=d.get('start_time'),
         event_time_end=d.get('end_time'),
         event_format=d['event_type'],  # already normalised by serializer
         modality=d['event_format'],    # already normalised by serializer

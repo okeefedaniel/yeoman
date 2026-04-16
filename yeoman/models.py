@@ -49,10 +49,14 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
     submitter_title = models.CharField(max_length=255, blank=True)
 
     # === Event Details ===
-    event_name = models.CharField(max_length=500)
+    # event_name / event_date / event_time_start are all optional — many
+    # inbound requests arrive with only "I'd like to have the principal
+    # speak, date TBD". We fill a derived event_name on save if blank
+    # and let staff nail down the date/time during triage.
+    event_name = models.CharField(max_length=500, blank=True)
     event_description = models.TextField(blank=True)
-    event_date = models.DateField()
-    event_time_start = models.TimeField()
+    event_date = models.DateField(null=True, blank=True)
+    event_time_start = models.TimeField(null=True, blank=True)
     event_time_end = models.TimeField(null=True, blank=True)
     event_timezone = models.CharField(max_length=50, default='America/New_York')
 
@@ -79,7 +83,9 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
         ('virtual', 'Virtual'),
         ('hybrid', 'Hybrid'),
     ]
-    modality = models.CharField(max_length=20, choices=MODALITY_CHOICES)
+    # Modality defaults to in_person because that's the most common ask;
+    # staff flip it on review if the submitter's request is ambiguous.
+    modality = models.CharField(max_length=20, choices=MODALITY_CHOICES, default='in_person')
 
     # === Location (for in-person / hybrid) ===
     venue_name = models.CharField(max_length=500, blank=True)
@@ -156,6 +162,23 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
     # === Submitter Status Token ===
     status_token = models.UUIDField(default=uuid.uuid4, editable=False)
 
+    # === Beacon (CRM) sync ===
+    BEACON_STATUS_CHOICES = [
+        ('', 'Undecided'),
+        ('added', 'Added to Beacon'),
+        ('declined', 'Skipped'),
+    ]
+    beacon_status = models.CharField(
+        max_length=10, choices=BEACON_STATUS_CHOICES, blank=True, default='',
+        help_text="Whether this submitter has been pushed to Beacon.",
+    )
+    beacon_contact_id = models.CharField(max_length=64, blank=True)
+    beacon_decided_at = models.DateTimeField(null=True, blank=True)
+    beacon_decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+
     class Meta:
         ordering = ['-event_date', '-created_at']
         indexes = [
@@ -176,13 +199,26 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
     @property
     def is_past(self):
         from django.utils import timezone
+        if not self.event_date:
+            return False
         return self.event_date < timezone.now().date()
+
+    @property
+    def needs_date(self):
+        """True when the submitter didn't pin down a date/time."""
+        return not self.event_date or not self.event_time_start
 
     @property
     def has_location(self):
         return self.latitude is not None and self.longitude is not None
 
     def save(self, **kwargs):
+        # Derive a placeholder event_name when the submitter left it
+        # blank — staff still need something to scan in the list view.
+        if not self.event_name:
+            label = dict(self.FORMAT_CHOICES).get(self.event_format, 'Event')
+            who = self.submitter_name or self.submitter_organization or 'Unknown'
+            self.event_name = f'{label} — {who}'[:500]
         # Geocode on save if address present but no coordinates
         if self.venue_address and not (self.latitude and self.longitude):
             from yeoman.services.geocoding import geocode_invitation

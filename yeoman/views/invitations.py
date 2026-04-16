@@ -137,6 +137,9 @@ class InvitationDetailView(LoginRequiredMixin, DetailView):
         ctx['STATUS_DISPLAY'] = STATUS_DISPLAY
         ctx['form'] = InvitationStaffForm(instance=inv)
 
+        from yeoman.services import beacon
+        ctx['beacon_available'] = beacon.is_available()
+
         # Build unified timeline from status history + notes
         history = list(inv.status_history.select_related('changed_by').all())
         notes = list(inv.notes.select_related('author').all())
@@ -291,6 +294,56 @@ def invitation_add_note(request, pk):
     )
 
     messages.success(request, 'Note added.')
+    return redirect('yeoman:invitation_detail', pk=pk)
+
+
+@login_required
+def invitation_beacon_toggle(request, pk):
+    """Mark this invitation's submitter as added-to / skipped-from Beacon.
+
+    POST ``decision`` = ``added`` | ``declined`` | ``reset``. On the first
+    transition to ``added`` we push the contact to Beacon; subsequent
+    flips just update local state (no duplicate push — Beacon's intake
+    dedups by email anyway).
+    """
+    if request.method != 'POST':
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    from django.utils import timezone
+    from yeoman.services import beacon
+
+    if not beacon.is_available():
+        messages.error(request, 'Beacon integration is not configured.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation = get_object_or_404(Invitation, pk=pk)
+    decision = request.POST.get('decision', '')
+
+    if decision == 'added':
+        if not invitation.beacon_contact_id:
+            try:
+                invitation.beacon_contact_id = beacon.push_invitation(invitation) or ''
+            except Exception as e:
+                messages.error(request, f'Beacon push failed: {e}')
+                return redirect('yeoman:invitation_detail', pk=pk)
+        invitation.beacon_status = 'added'
+        messages.success(request, 'Submitter added to Beacon.')
+    elif decision == 'declined':
+        invitation.beacon_status = 'declined'
+        messages.success(request, 'Marked as skipped for Beacon.')
+    elif decision == 'reset':
+        invitation.beacon_status = ''
+        messages.success(request, 'Beacon decision cleared.')
+    else:
+        messages.error(request, 'Unknown decision.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation.beacon_decided_at = timezone.now()
+    invitation.beacon_decided_by = request.user
+    invitation.save(update_fields=[
+        'beacon_status', 'beacon_contact_id',
+        'beacon_decided_at', 'beacon_decided_by', 'updated_at',
+    ])
     return redirect('yeoman:invitation_detail', pk=pk)
 
 

@@ -34,13 +34,13 @@
             <div class="col-md-4">
               <div class="small text-muted text-uppercase">Date</div>
               <div class="{% if invitation.is_past %}text-danger{% endif %}">
-                {{ invitation.event_date|date:"l, M d, Y" }}
+                {{ invitation.event_date|date:"l, M d, Y"|default:"TBD — follow up with submitter" }}
               </div>
             </div>
             <div class="col-md-4">
               <div class="small text-muted text-uppercase">Time</div>
               <div>
-                {{ invitation.event_time_start|time:"g:i A" }}{% if invitation.event_time_end %} - {{ invitation.event_time_end|time:"g:i A" }}{% endif %}
+                {% if invitation.event_time_start %}{{ invitation.event_time_start|time:"g:i A" }}{% if invitation.event_time_end %} - {{ invitation.event_time_end|time:"g:i A" }}{% endif %}{% else %}TBD{% endif %}
               </div>
             </div>
             <div class="col-md-4">
@@ -229,6 +229,61 @@
           </div>
         </div>
       </div>
+
+      {% if beacon_available %}
+      <!-- Beacon (CRM) -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-broadcast me-2"></i>Beacon</span>
+          {% if invitation.beacon_status == 'added' %}
+            <span class="badge bg-success">Added</span>
+          {% elif invitation.beacon_status == 'declined' %}
+            <span class="badge bg-secondary">Skipped</span>
+          {% else %}
+            <span class="badge bg-light text-dark border">Undecided</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <p class="small text-muted mb-3">
+            Add {{ invitation.submitter_name }} to Beacon as a contact?
+          </p>
+          <div class="d-flex gap-2">
+            <form method="post" action="{% url 'yeoman:invitation_beacon_toggle' invitation.pk %}" class="flex-fill">
+              {% csrf_token %}
+              <input type="hidden" name="decision" value="added">
+              <button type="submit"
+                      class="btn btn-sm w-100 {% if invitation.beacon_status == 'added' %}btn-success{% else %}btn-outline-success{% endif %}"
+                      title="Add to Beacon">
+                <i class="bi bi-check-lg"></i>
+              </button>
+            </form>
+            <form method="post" action="{% url 'yeoman:invitation_beacon_toggle' invitation.pk %}" class="flex-fill">
+              {% csrf_token %}
+              <input type="hidden" name="decision" value="declined">
+              <button type="submit"
+                      class="btn btn-sm w-100 {% if invitation.beacon_status == 'declined' %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+                      title="Skip — do not add to Beacon">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </form>
+          </div>
+          {% if invitation.beacon_status %}
+          <form method="post" action="{% url 'yeoman:invitation_beacon_toggle' invitation.pk %}" class="mt-2">
+            {% csrf_token %}
+            <input type="hidden" name="decision" value="reset">
+            <button type="submit" class="btn btn-link btn-sm p-0 text-muted">Clear decision</button>
+          </form>
+          {% endif %}
+          {% if invitation.beacon_decided_at %}
+          <div class="small text-muted mt-2">
+            {{ invitation.get_beacon_status_display }} by
+            {{ invitation.beacon_decided_by|default:"—" }}
+            on {{ invitation.beacon_decided_at|date:"M d, Y g:i A" }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
 
       <!-- Delegate -->
       <div class="card mb-4">

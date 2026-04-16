@@ -8,6 +8,7 @@ from .invitations import (
     invitation_unclaim,
     invitation_add_note,
     invitation_delegate,
+    invitation_beacon_toggle,
 )
 from .public import PublicInviteView, InvitationStatusView
 from .calendar_view import CalendarView, calendar_events_json

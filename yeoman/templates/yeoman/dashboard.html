@@ -120,7 +120,7 @@
                       {{ inv.event_name|truncatechars:50 }}
                     </a>
                   </td>
-                  <td class="{% if inv.is_past %}text-danger{% endif %}">{{ inv.event_date|date:"M d, Y" }}</td>
+                  <td class="{% if inv.is_past %}text-danger{% endif %}">{{ inv.event_date|date:"M d, Y"|default:"TBD" }}</td>
                   <td>{% status_badge inv.status %}</td>
                   <td class="text-muted small">{{ inv.submitter_name }}</td>
                 </tr>
@@ -151,7 +151,7 @@
           {% for inv in upcoming_events %}
           <a href="{% url 'yeoman:invitation_detail' inv.pk %}" class="list-group-item list-group-item-action">
             <div class="fw-semibold small">{{ inv.event_name|truncatechars:40 }}</div>
-            <small class="text-muted">{{ inv.event_date|date:"D, M d" }} at {{ inv.event_time_start|time:"g:i A" }}</small>
+            <small class="text-muted">{{ inv.event_date|date:"D, M d"|default:"Date TBD" }}{% if inv.event_time_start %} at {{ inv.event_time_start|time:"g:i A" }}{% endif %}</small>
           </a>
           {% endfor %}
         </div>
