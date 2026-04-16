@@ -115,9 +115,19 @@ class PublicInvitationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make date/time optional for flexible submitters
-        self.fields['event_date'].required = False
-        self.fields['event_time_start'].required = False
+        # Only name, email, and event_format are truly required — everything
+        # else is flexible. Date/time/modality might be blank from the model
+        # already, but force-clear `required` here too so no stray asterisks
+        # appear on the form.
+        for optional in (
+            'event_date', 'event_time_start', 'event_time_end',
+            'event_name', 'event_format_other', 'modality',
+            'venue_name', 'venue_address', 'venue_city', 'venue_state', 'venue_zip',
+            'virtual_platform', 'virtual_link',
+            'expected_attendees',
+        ):
+            if optional in self.fields:
+                self.fields[optional].required = False
         self.fields['event_name'].widget.attrs['placeholder'] = 'Event Name'
         self.fields['submitter_first_name'].widget.attrs['placeholder'] = 'First Name'
         self.fields['submitter_last_name'].widget.attrs['placeholder'] = 'Last Name'
@@ -126,8 +136,9 @@ class PublicInvitationForm(forms.ModelForm):
 
         self.helper = FormHelper()
         self.helper.form_method = 'post'
+        # Let the browser enforce `required` attributes on first/last name,
+        # email, and event_format. Server-side validation still runs on top.
         self.helper.form_class = 'needs-validation'
-        self.helper.attrs = {'novalidate': ''}
         self.helper.layout = Layout(
             HTML(
                 '<div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">'

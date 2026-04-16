@@ -98,6 +98,10 @@ class PublicInviteView(FormView):
             agency = Agency.objects.create(name='Default Agency', abbreviation='DEFAULT')
         invitation.agency = agency
         invitation.status = 'received'
+        # Modality is optional on the form — fill the model default when
+        # left blank so we don't save an empty-string that fails choices.
+        if not invitation.modality:
+            invitation.modality = 'in_person'
         invitation.save()
 
         # Handle file attachment (validated by Keel FileSecurityValidator)
