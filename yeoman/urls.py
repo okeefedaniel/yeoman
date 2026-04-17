@@ -14,6 +14,7 @@ from yeoman.views import (
     invitation_add_note,
     invitation_delegate,
     invitation_beacon_toggle,
+    invitation_send_email,
     PublicInviteView,
     InvitationStatusView,
     CalendarView,
@@ -71,6 +72,7 @@ urlpatterns = [
     path('invitations/<uuid:pk>/note/', invitation_add_note, name='invitation_add_note'),
     path('invitations/<uuid:pk>/delegate/', invitation_delegate, name='invitation_delegate'),
     path('invitations/<uuid:pk>/beacon/', invitation_beacon_toggle, name='invitation_beacon_toggle'),
+    path('invitations/<uuid:pk>/email/', invitation_send_email, name='invitation_send_email'),
     path('invitations/<uuid:pk>/ical/', invitation_ical, name='invitation_ical'),
 
     # Calendar

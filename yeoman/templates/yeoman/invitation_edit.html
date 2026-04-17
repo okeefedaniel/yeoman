@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load yeoman_tags crispy_forms_tags %}
+
+{% block title %}Edit: {{ invitation.event_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="mb-4">
+    <a href="{% url 'yeoman:invitation_detail' invitation.pk %}" class="text-muted text-decoration-none small">
+      <i class="bi bi-arrow-left me-1"></i>Back to {{ invitation.event_name|truncatechars:40 }}
+    </a>
+    <h2 class="mt-2 mb-1">Edit Invitation</h2>
+    <div class="d-flex gap-2 align-items-center">
+      {% status_badge invitation.status %}
+      <span class="text-muted small">{{ invitation.submitter_name }} — {{ invitation.get_event_format_display }}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        {% crispy form %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

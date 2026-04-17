@@ -173,6 +173,82 @@
         </div>
       </div>
       {% endif %}
+
+      <!-- Send Email to Submitter -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <i class="bi bi-envelope me-2"></i>Email Submitter
+          <span class="text-muted small ms-2">({{ invitation.submitter_email }})</span>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'yeoman:invitation_send_email' invitation.pk %}">
+            {% csrf_token %}
+            <div class="mb-2">
+              <input type="text" name="subject" class="form-control form-control-sm"
+                     placeholder="Subject" required
+                     value="Re: {{ invitation.event_name|truncatechars:80 }}">
+            </div>
+            <div class="mb-2">
+              <textarea name="body" class="form-control form-control-sm" rows="4"
+                        placeholder="Message to {{ invitation.submitter_name }}..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+              <i class="bi bi-send me-1"></i>Send Email
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      {% if timeline %}
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-clock-history me-2"></i>Activity</div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            {% for entry in timeline %}
+            <div class="list-group-item small">
+              {% if entry.type == 'status' %}
+                <i class="bi bi-arrow-right-circle text-primary me-1"></i>
+                <strong>{{ entry.obj.from_status }}</strong> &rarr; <strong>{{ entry.obj.to_status }}</strong>
+                {% if entry.obj.changed_by %}by {{ entry.obj.changed_by }}{% endif %}
+                {% if entry.obj.comment %}<br><span class="text-muted">{{ entry.obj.comment }}</span>{% endif %}
+              {% elif entry.type == 'note' %}
+                {% if entry.obj.is_internal %}
+                  <i class="bi bi-chat-dots text-secondary me-1"></i>
+                {% else %}
+                  <i class="bi bi-envelope-check text-success me-1"></i>
+                {% endif %}
+                <strong>{{ entry.obj.author }}</strong>
+                <br><span class="text-muted" style="white-space:pre-line">{{ entry.obj.content|truncatechars:300 }}</span>
+              {% elif entry.type == 'delegation' %}
+                <i class="bi bi-person-plus text-info me-1"></i>
+                <strong>{{ entry.obj.delegated_by }}</strong> &rarr; <strong>{{ entry.obj.delegated_to }}</strong>
+                {% if entry.obj.notes %}<br><span class="text-muted">{{ entry.obj.notes|truncatechars:120 }}</span>{% endif %}
+              {% endif %}
+              <div class="text-muted mt-1" style="font-size:0.75rem">{{ entry.timestamp|date:"M d, Y g:i A" }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Add Note -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-chat-dots me-2"></i>Add Internal Note</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'yeoman:invitation_add_note' invitation.pk %}">
+            {% csrf_token %}
+            <div class="mb-2">
+              <textarea name="content" class="form-control form-control-sm" rows="3"
+                        placeholder="Internal note (staff only)..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
+              <i class="bi bi-plus me-1"></i>Add Note
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Sidebar -->
@@ -187,10 +263,15 @@
           {% for t in transitions %}
           <form method="post" action="{% url 'yeoman:invitation_transition' invitation.pk %}">
             {% csrf_token %}
-            <input type="hidden" name="transition" value="{{ t.name }}">
-            <button type="submit" class="btn btn-outline-primary btn-sm w-100"
-                    data-confirm="Transition to {{ t.to }}?">
-              {{ t.name|title }}
+            <input type="hidden" name="target_status" value="{{ t.to_status }}">
+            {% if t.require_comment %}
+            <div class="mb-2">
+              <textarea name="comment" class="form-control form-control-sm" rows="2"
+                        placeholder="Reason (required)" required></textarea>
+            </div>
+            {% endif %}
+            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+              {{ t.label }}
             </button>
           </form>
           {% endfor %}

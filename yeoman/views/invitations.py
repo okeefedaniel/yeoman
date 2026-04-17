@@ -164,7 +164,7 @@ class InvitationDetailView(LoginRequiredMixin, DetailView):
 class InvitationUpdateView(LoginRequiredMixin, UpdateView):
     model = Invitation
     form_class = InvitationStaffForm
-    template_name = 'yeoman/invitation_detail.html'
+    template_name = 'yeoman/invitation_edit.html'
 
     def get_success_url(self):
         return reverse('yeoman:invitation_detail', kwargs={'pk': self.object.pk})
@@ -175,13 +175,7 @@ class InvitationUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        inv = self.object
-        ctx['invitation'] = inv
-        ctx['transitions'] = inv.get_available_transitions(self.request.user)
-        ctx['delegation_history'] = inv.delegation_history.select_related(
-            'delegated_by', 'delegated_to',
-        )[:20]
-        ctx['attachments'] = inv.attachments.all()
+        ctx['invitation'] = self.object
         ctx['STATUS_DISPLAY'] = STATUS_DISPLAY
         return ctx
 
@@ -344,6 +338,52 @@ def invitation_beacon_toggle(request, pk):
         'beacon_status', 'beacon_contact_id',
         'beacon_decided_at', 'beacon_decided_by', 'updated_at',
     ])
+    return redirect('yeoman:invitation_detail', pk=pk)
+
+
+@login_required
+def invitation_send_email(request, pk):
+    """Send an email to the invitation submitter and log it as a note."""
+    if request.method != 'POST':
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    invitation = get_object_or_404(Invitation, pk=pk)
+    subject = request.POST.get('subject', '').strip()
+    body = request.POST.get('body', '').strip()
+
+    if not subject or not body:
+        messages.error(request, 'Both subject and message are required.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    from django.core.mail import EmailMultiAlternatives
+    from django.conf import settings as django_settings
+
+    from_email = django_settings.DEFAULT_FROM_EMAIL
+    try:
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=body,
+            from_email=from_email,
+            to=[invitation.submitter_email],
+            reply_to=[request.user.email] if request.user.email else [],
+        )
+        html_body = body.replace('\n', '<br>')
+        email.attach_alternative(
+            f'<div style="font-family:sans-serif;line-height:1.5">{html_body}</div>',
+            'text/html',
+        )
+        email.send()
+
+        InvitationNote.objects.create(
+            invitation=invitation,
+            author=request.user,
+            content=f'Email sent to {invitation.submitter_email}\nSubject: {subject}\n\n{body}',
+            is_internal=False,
+        )
+        messages.success(request, f'Email sent to {invitation.submitter_email}.')
+    except Exception as e:
+        messages.error(request, f'Email failed: {e}')
+
     return redirect('yeoman:invitation_detail', pk=pk)
 
 
