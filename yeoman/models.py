@@ -108,7 +108,12 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
         on_delete=models.SET_NULL, related_name='assigned_invitations',
-        help_text="The staff member currently responsible for this invitation.",
+        help_text="The claimant — staff member who manages logistics and confirmations.",
+    )
+    principal = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='principal_invitations',
+        help_text="The principal — person attending to speak at the event.",
     )
     delegated_to = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,

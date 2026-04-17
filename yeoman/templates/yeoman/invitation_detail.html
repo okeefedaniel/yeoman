@@ -288,8 +288,12 @@
             {% status_badge invitation.status %}
           </div>
           <div class="mb-3">
-            <div class="small text-muted text-uppercase">Assigned To</div>
+            <div class="small text-muted text-uppercase">Claimant</div>
             <div>{{ invitation.assigned_to|default:"Unassigned" }}</div>
+          </div>
+          <div class="mb-3">
+            <div class="small text-muted text-uppercase">Principal (Speaker)</div>
+            <div>{{ invitation.principal|default:"Unassigned" }}</div>
           </div>
           {% if invitation.delegated_to %}
           <div class="mb-3">

@@ -38,7 +38,7 @@ class InvitationListView(LoginRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('assigned_to', 'agency')
+        qs = super().get_queryset().select_related('assigned_to', 'principal', 'agency')
         # Filters
         filter_type = self.request.GET.get('filter')
         if filter_type == 'overdue':
@@ -123,7 +123,8 @@ class InvitationDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         return super().get_queryset().select_related(
-            'assigned_to', 'delegated_to', 'delegated_by', 'agency', 'created_by',
+            'assigned_to', 'principal', 'delegated_to', 'delegated_by',
+            'agency', 'created_by', 'calendar_sent_by',
         )
 
     def get_context_data(self, **kwargs):

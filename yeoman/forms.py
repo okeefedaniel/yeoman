@@ -15,7 +15,8 @@ class InvitationStaffForm(forms.ModelForm):
     class Meta:
         model = Invitation
         fields = [
-            'priority', 'assigned_to', 'event_name', 'event_description',
+            'priority', 'assigned_to', 'principal', 'event_name',
+            'event_description',
             'event_date', 'event_time_start', 'event_time_end',
             'event_format', 'modality', 'venue_name', 'venue_address',
             'venue_city', 'venue_state', 'venue_zip',
@@ -23,6 +24,10 @@ class InvitationStaffForm(forms.ModelForm):
             'expected_attendees', 'surrogate_ok',
             'press_expected', 'will_be_recorded',
         ]
+        labels = {
+            'assigned_to': 'Claimant',
+            'principal': 'Principal (Speaker)',
+        }
         widgets = {
             'event_description': forms.Textarea(attrs={'rows': 3}),
             'event_date': forms.DateInput(attrs={'type': 'date'}),
@@ -64,10 +69,11 @@ class InvitationStaffForm(forms.ModelForm):
                 ),
             ),
             Fieldset(
-                'Workflow',
+                'Assignment',
                 Row(
-                    Column('priority', css_class='col-md-6'),
-                    Column('assigned_to', css_class='col-md-6'),
+                    Column('assigned_to', css_class='col-md-4'),
+                    Column('principal', css_class='col-md-4'),
+                    Column('priority', css_class='col-md-4'),
                 ),
             ),
             Fieldset(
