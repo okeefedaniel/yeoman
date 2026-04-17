@@ -138,7 +138,21 @@ class InvitationDetailView(LoginRequiredMixin, DetailView):
         ctx['form'] = InvitationStaffForm(instance=inv)
 
         from yeoman.services import beacon
+        from yeoman.models import PrincipalProfile
         ctx['beacon_available'] = beacon.is_available()
+
+        # Pre-fill calendar invite recipients with principal + submitter
+        suggested = []
+        try:
+            profile = inv.agency.principal_profile
+            if profile.email:
+                suggested.append(profile.email)
+        except PrincipalProfile.DoesNotExist:
+            pass
+        if inv.submitter_email and inv.submitter_email not in suggested:
+            suggested.append(inv.submitter_email)
+        ctx['calendar_suggested_recipients'] = ', '.join(suggested)
+        ctx['can_send_calendar'] = bool(inv.event_date)
 
         # Build unified timeline from status history + notes
         history = list(inv.status_history.select_related('changed_by').all())

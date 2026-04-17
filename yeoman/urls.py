@@ -25,7 +25,7 @@ from yeoman.views import (
     InvitationExportView,
     PrincipalSettingsView,
 )
-from yeoman.views.ical import invitation_ical
+from yeoman.views.ical import invitation_ical, invitation_send_calendar
 
 app_name = 'yeoman'
 
@@ -74,6 +74,7 @@ urlpatterns = [
     path('invitations/<uuid:pk>/beacon/', invitation_beacon_toggle, name='invitation_beacon_toggle'),
     path('invitations/<uuid:pk>/email/', invitation_send_email, name='invitation_send_email'),
     path('invitations/<uuid:pk>/ical/', invitation_ical, name='invitation_ical'),
+    path('invitations/<uuid:pk>/send-calendar/', invitation_send_calendar, name='invitation_send_calendar'),
 
     # Calendar
     path('calendar/', CalendarView.as_view(), name='calendar'),

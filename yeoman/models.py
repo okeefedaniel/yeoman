@@ -158,6 +158,14 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
         help_text="External calendar event ID after push (Exchange/Google).",
     )
     calendar_pushed_at = models.DateTimeField(null=True, blank=True)
+    calendar_sent_to = models.TextField(
+        blank=True,
+        help_text="Comma-separated emails that received the calendar invite.",
+    )
+    calendar_sent_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
 
     # === Submitter Status Token ===
     status_token = models.UUIDField(default=uuid.uuid4, editable=False)
