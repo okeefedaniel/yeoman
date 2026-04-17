@@ -40,14 +40,14 @@ class InvitationIntakeSerializer(serializers.Serializer):
 
     # Submitter. Accept either split first/last OR a combined "name"
     # which is split on the last whitespace.
-    first_name = serializers.CharField(max_length=128, required=False, default='')
-    last_name = serializers.CharField(max_length=128, required=False, default='')
-    name = serializers.CharField(max_length=256, required=False, default='')
+    first_name = serializers.CharField(max_length=128, required=False, default='', allow_blank=True)
+    last_name = serializers.CharField(max_length=128, required=False, default='', allow_blank=True)
+    name = serializers.CharField(max_length=256, required=False, default='', allow_blank=True)
     email = serializers.EmailField()
-    organization = serializers.CharField(max_length=255, required=False, default='')
+    organization = serializers.CharField(max_length=255, required=False, default='', allow_blank=True)
 
     # Event details
-    event_name = serializers.CharField(max_length=500, required=False, default='')
+    event_name = serializers.CharField(max_length=500, required=False, default='', allow_blank=True)
     event_date = serializers.DateField(required=False, allow_null=True, default=None)
     start_time = serializers.TimeField(required=False, allow_null=True, default=None)
     end_time = serializers.TimeField(required=False, allow_null=True, default=None)
@@ -56,16 +56,16 @@ class InvitationIntakeSerializer(serializers.Serializer):
     # need to know whether it's a keynote, a panel, a ribbon-cutting,
     # etc. before routing. "other" is the escape hatch.
     event_type = serializers.CharField(max_length=50)
-    event_format = serializers.CharField(max_length=50, required=False, default='in_person')
+    event_format = serializers.CharField(max_length=50, required=False, default='in_person', allow_blank=True)
 
     # Location
-    location = serializers.CharField(max_length=1000, required=False, default='')
+    location = serializers.CharField(max_length=1000, required=False, default='', allow_blank=True)
 
     # Logistics
     attendees = serializers.IntegerField(required=False, allow_null=True, default=None)
-    proxy = serializers.CharField(max_length=10, required=False, default='yes')
-    press = serializers.CharField(max_length=10, required=False, default='unknown')
-    event_recorded = serializers.CharField(max_length=10, required=False, default='unknown')
+    proxy = serializers.CharField(max_length=10, required=False, default='yes', allow_blank=True)
+    press = serializers.CharField(max_length=10, required=False, default='unknown', allow_blank=True)
+    event_recorded = serializers.CharField(max_length=10, required=False, default='unknown', allow_blank=True)
 
     # Notes
     notes = serializers.CharField(required=False, default='', allow_blank=True)
@@ -80,6 +80,8 @@ class InvitationIntakeSerializer(serializers.Serializer):
         return normalised
 
     def validate_event_format(self, value):
+        if not value or not value.strip():
+            return 'in_person'
         normalised = MODALITY_MAP.get(value.lower().strip())
         if not normalised:
             raise serializers.ValidationError(
