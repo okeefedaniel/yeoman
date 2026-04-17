@@ -110,8 +110,9 @@ def invitation_send_calendar(request, pk):
             f'<div style="font-family:sans-serif;line-height:1.6">{html_body}</div>',
             'text/html',
         )
+        ics_request = ics.replace('METHOD:PUBLISH', 'METHOD:REQUEST')
         filename = f'{invitation.event_name[:40].replace(" ", "_")}.ics'
-        email.attach(filename, ics, 'text/calendar')
+        email.attach(filename, ics_request, 'text/calendar; method=REQUEST')
         email.send()
 
         invitation.calendar_pushed_at = timezone.now()
