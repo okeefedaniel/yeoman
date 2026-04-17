@@ -103,7 +103,7 @@
         <div class="card-body p-0">
           {% if recent_invitations %}
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 table-clickable">
               <thead>
                 <tr>
                   <th>Event</th>
@@ -114,7 +114,7 @@
               </thead>
               <tbody>
                 {% for inv in recent_invitations %}
-                <tr data-href="{% url 'yeoman:invitation_detail' inv.pk %}" style="cursor:pointer;">
+                <tr data-href="{% url 'yeoman:invitation_detail' inv.pk %}">
                   <td>
                     <a href="{% url 'yeoman:invitation_detail' inv.pk %}" class="text-decoration-none fw-semibold">
                       {{ inv.event_name|truncatechars:50 }}
