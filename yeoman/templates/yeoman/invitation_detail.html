@@ -18,9 +18,22 @@
         <span class="text-muted small">{{ invitation.get_event_format_display }} &middot; {{ invitation.get_modality_display }}</span>
       </div>
     </div>
-    <a href="{% url 'yeoman:invitation_update' invitation.pk %}" class="btn btn-sm btn-outline-primary">
-      <i class="bi bi-pencil me-1"></i>Edit
-    </a>
+    <div class="d-flex gap-2 align-items-start flex-wrap">
+      {% for t in transitions %}
+      <form method="post" action="{% url 'yeoman:invitation_transition' invitation.pk %}" class="d-inline"
+            {% if t.require_comment %}onsubmit="var c=prompt('Reason for {{ t.label|lower }}:');if(!c)return false;this.querySelector('[name=comment]').value=c;"{% endif %}>
+        {% csrf_token %}
+        <input type="hidden" name="target_status" value="{{ t.to_status }}">
+        {% if t.require_comment %}<input type="hidden" name="comment" value="">{% endif %}
+        <button type="submit" class="btn btn-sm {% if t.to_status == 'accepted' or t.to_status == 'scheduled' %}btn-success{% elif t.to_status == 'declined' or t.to_status == 'cancelled' %}btn-outline-danger{% else %}btn-outline-primary{% endif %}">
+          {{ t.label }}
+        </button>
+      </form>
+      {% endfor %}
+      <a href="{% url 'yeoman:invitation_update' invitation.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-pencil me-1"></i>Edit
+      </a>
+    </div>
   </div>
 
   <div class="row g-4">
@@ -253,32 +266,6 @@
 
     <!-- Sidebar -->
     <div class="col-lg-4">
-      <!-- Workflow Transitions -->
-      {% if transitions %}
-      <div class="card mb-4 border-primary">
-        <div class="card-header bg-primary text-white">
-          <i class="bi bi-arrow-right-circle me-2"></i>Actions
-        </div>
-        <div class="card-body d-grid gap-2">
-          {% for t in transitions %}
-          <form method="post" action="{% url 'yeoman:invitation_transition' invitation.pk %}">
-            {% csrf_token %}
-            <input type="hidden" name="target_status" value="{{ t.to_status }}">
-            {% if t.require_comment %}
-            <div class="mb-2">
-              <textarea name="comment" class="form-control form-control-sm" rows="2"
-                        placeholder="Reason (required)" required></textarea>
-            </div>
-            {% endif %}
-            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
-              {{ t.label }}
-            </button>
-          </form>
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
       <!-- Quick Info -->
       <div class="card mb-4">
         <div class="card-header">Quick Info</div>
