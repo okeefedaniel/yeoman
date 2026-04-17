@@ -136,9 +136,10 @@ class PublicInvitationForm(forms.ModelForm):
 
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        # Let the browser enforce `required` attributes on first/last name,
+        # Browser-native validation enforces `required` on first/last name,
         # email, and event_format. Server-side validation still runs on top.
-        self.helper.form_class = 'needs-validation'
+        # No `needs-validation` class — that's for JS-driven validation with
+        # `novalidate`, which we don't use.
         self.helper.layout = Layout(
             HTML(
                 '<div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">'
