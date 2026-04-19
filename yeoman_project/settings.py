@@ -338,7 +338,16 @@ KEEL_AUDIT_LOG_MODEL = 'yeoman_core.AuditLog'
 KEEL_NOTIFICATION_MODEL = 'yeoman_core.Notification'
 KEEL_NOTIFICATION_PREFERENCE_MODEL = 'yeoman_core.NotificationPreference'
 KEEL_NOTIFICATION_LOG_MODEL = 'yeoman_core.NotificationLog'
-KEEL_CSP_POLICY = {}
+KEEL_CSP_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://api.mapbox.com; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://api.mapbox.com; "
+    "img-src 'self' data: blob: https:; "
+    "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+    "connect-src 'self' https://api.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com; "
+    "worker-src 'self' blob:; "
+    "frame-ancestors 'none'"
+)
 KEEL_FILE_SCANNING_ENABLED = not DEBUG
 KEEL_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
 KEEL_ALLOWED_UPLOAD_EXTENSIONS = [
