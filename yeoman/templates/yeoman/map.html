@@ -3,7 +3,7 @@
 {% block title %}Map{% endblock %}
 
 {% block extra_css %}
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css" rel="stylesheet">
 <style>#map { height: 600px; border-radius: 0.375rem; }</style>
 {% endblock %}
 
@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   mapboxgl.accessToken = '{{ mapbox_token }}';
