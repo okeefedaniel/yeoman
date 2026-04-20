@@ -25,6 +25,41 @@ class InvitationTag(models.Model):
         return self.name
 
 
+class InvitationQuerySet(models.QuerySet):
+    """Security-critical scoping helpers.
+
+    Every invitation view MUST resolve records through ``for_user`` (or an
+    equivalent agency filter) to prevent IDOR. Invitation UUIDs leak via
+    notification emails and calendar links, so relying on the detail URL
+    being hard to guess is not sufficient.
+    """
+
+    def for_user(self, user):
+        if not getattr(user, 'is_authenticated', False):
+            return self.none()
+        if getattr(user, 'is_superuser', False):
+            return self
+        agency = getattr(user, 'agency', None) or getattr(user, 'agency_id', None)
+        if not agency:
+            # No agency binding → only records where the user is directly
+            # assigned/delegated/created can be touched.
+            return self.filter(
+                models.Q(assigned_to=user)
+                | models.Q(delegated_to=user)
+                | models.Q(created_by=user)
+            )
+        return self.filter(
+            models.Q(agency=agency)
+            | models.Q(assigned_to=user)
+            | models.Q(delegated_to=user)
+            | models.Q(created_by=user)
+        )
+
+
+class InvitationManager(models.Manager.from_queryset(InvitationQuerySet)):
+    pass
+
+
 class Invitation(WorkflowModelMixin, KeelBaseModel):
     """
     The core record. Represents a request for the principal's time.
@@ -174,6 +209,8 @@ class Invitation(WorkflowModelMixin, KeelBaseModel):
 
     # === Submitter Status Token ===
     status_token = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    objects = InvitationManager()
 
     # === Beacon (CRM) sync ===
     BEACON_STATUS_CHOICES = [

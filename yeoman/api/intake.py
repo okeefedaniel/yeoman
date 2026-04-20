@@ -5,6 +5,7 @@ import urllib.parse
 import urllib.request
 
 from django.conf import settings
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils import timezone
 
@@ -27,6 +28,12 @@ def _compute_distances(event_location, agency):
 
     Returns empty list if no profile/addresses or API key is missing.
     """
+    # Skip entirely in demo mode — the intake endpoint is auth-bypassed
+    # there, so unauthenticated attackers could otherwise burn Google
+    # Distance Matrix budget by looping POSTs.
+    if getattr(settings, 'DEMO_MODE', False):
+        return []
+
     api_key = getattr(settings, 'GOOGLE_GEOCODING_API_KEY', '') or ''
     if not api_key or not event_location:
         return []
@@ -45,6 +52,11 @@ def _compute_distances(event_location, agency):
         try:
             origin = urllib.parse.quote(addr.address)
             destination = urllib.parse.quote(event_location)
+            cache_key = f'yeoman:dm:{addr.address}|{event_location}'
+            cached = cache.get(cache_key)
+            if cached is not None:
+                results.append(cached)
+                continue
             url = (
                 f"https://maps.googleapis.com/maps/api/distancematrix/json"
                 f"?units=imperial&origins={origin}&destinations={destination}&key={api_key}"
@@ -59,12 +71,15 @@ def _compute_distances(event_location, agency):
                     f"https://www.google.com/maps/dir/?api=1"
                     f"&origin={origin}&destination={destination}"
                 )
-                results.append({
+                entry = {
                     'label': addr.label,
                     'distance': element['distance']['text'],
                     'duration': element['duration']['text'],
                     'directions_url': directions_url,
-                })
+                }
+                # 24h cache on (origin, destination) pair
+                cache.set(cache_key, entry, timeout=86400)
+                results.append(entry)
             else:
                 results.append({
                     'label': addr.label,

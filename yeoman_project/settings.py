@@ -30,8 +30,13 @@ if RAILWAY_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_DOMAIN)
     ALLOWED_HOSTS.append('.railway.app')
 
-# Custom domain
-ALLOWED_HOSTS.append('.docklabs.ai')
+# Custom domain — explicit host pin (wildcard `.docklabs.ai` let any
+# subdomain Host header pass, which widens the surface for Host-header
+# injection attacks on a shared proxy).
+ALLOWED_HOSTS.extend([
+    'yeoman.docklabs.ai',
+    'demo-yeoman.docklabs.ai',
+])
 
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 if RAILWAY_DOMAIN:
@@ -76,6 +81,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'keel.security.middleware.SecurityHeadersMiddleware',
+    'keel.security.middleware.AdminIPAllowlistMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -86,8 +92,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'keel.core.middleware.AuditMiddleware',
     'keel.security.middleware.FailedLoginMonitor',
+    'keel.core.middleware.AuditMiddleware',
 ]
 
 ROOT_URLCONF = 'yeoman_project.urls'
@@ -306,17 +312,7 @@ MFA_PASSKEY_LOGIN_ENABLED = True
 # Keel
 KEEL_GATE_ACCESS = True
 KEEL_PRODUCT_CODE = 'yeoman'
-KEEL_FLEET_PRODUCTS = [
-    {'name': 'Helm', 'label': 'Helm', 'code': 'helm', 'url': 'https://helm.docklabs.ai/dashboard/'},
-    {'name': 'Harbor', 'label': 'Harbor', 'code': 'harbor', 'url': 'https://harbor.docklabs.ai/dashboard/'},
-    {'name': 'Beacon', 'label': 'Beacon', 'code': 'beacon', 'url': 'https://beacon.docklabs.ai/dashboard/'},
-    {'name': 'Lookout', 'label': 'Lookout', 'code': 'lookout', 'url': 'https://lookout.docklabs.ai/dashboard/'},
-    {'name': 'Bounty', 'label': 'Bounty', 'code': 'bounty', 'url': 'https://bounty.docklabs.ai/dashboard/'},
-    {'name': 'Admiralty', 'label': 'Admiralty', 'code': 'admiralty', 'url': 'https://admiralty.docklabs.ai/dashboard/'},
-    {'name': 'Purser', 'label': 'Purser', 'code': 'purser', 'url': 'https://purser.docklabs.ai/dashboard/'},
-    {'name': 'Manifest', 'label': 'Manifest', 'code': 'manifest', 'url': 'https://manifest.docklabs.ai/dashboard/'},
-    {'name': 'Yeoman', 'label': 'Yeoman', 'code': 'yeoman', 'url': 'https://yeoman.docklabs.ai/dashboard/'},
-]
+from keel.core.fleet import FLEET as KEEL_FLEET_PRODUCTS  # noqa: E402,F401
 KEEL_PRODUCT_NAME = 'Yeoman'
 KEEL_PRODUCT_ICON = 'bi-calendar2-week'
 KEEL_PRODUCT_SUBTITLE = 'Event Scheduling & Invitation Workflow'
@@ -366,3 +362,14 @@ MAPBOX_ACCESS_TOKEN = os.environ.get('MAPBOX_ACCESS_TOKEN', '')
 
 # Site
 SITE_NAME = 'Yeoman'
+
+# --- Admin allowlist + trusted-proxy config (keel.security) ---
+# KEEL_ADMIN_ALLOWED_IPS: list of CIDR / IPs allowed to hit /admin/.
+#   Empty list = no-op (dev). Set via env on every Railway service in prod.
+# KEEL_TRUSTED_PROXY_COUNT: number of trusted proxies between the client and
+#   Django. Railway = 1. If 0, X-Forwarded-For is ignored (client spoof-safe).
+KEEL_ADMIN_ALLOWED_IPS = [
+    ip.strip() for ip in os.environ.get('KEEL_ADMIN_ALLOWED_IPS', '').split(',')
+    if ip.strip()
+]
+KEEL_TRUSTED_PROXY_COUNT = int(os.environ.get('KEEL_TRUSTED_PROXY_COUNT', '1'))

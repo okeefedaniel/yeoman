@@ -3,11 +3,18 @@ from datetime import datetime, timedelta
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.mail import EmailMultiAlternatives
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
+from django.utils.html import escape as _html_escape
 
 from keel.calendar.ical import generate_single_ical, ical_response
 from yeoman.models import Invitation, InvitationNote
+from yeoman.views.invitations import (
+    MAX_EMAIL_RECIPIENTS,
+    _email_rate_limited,
+    _get_invitation_or_404,
+)
 
 
 def _build_ics(invitation):
@@ -47,8 +54,22 @@ def _build_ics(invitation):
 
 
 def invitation_ical(request, pk):
-    """Download a single invitation as an .ics file."""
-    invitation = get_object_or_404(Invitation, pk=pk)
+    """Download a single invitation as an .ics file.
+
+    Requires either an authenticated, agency-scoped user OR a valid
+    ``status_token`` query param. The raw pk is leaked via notification
+    emails, so authenticating on pk alone would disclose a principal's
+    schedule to anyone who received a link.
+    """
+    token = request.GET.get('token', '')
+    if token:
+        invitation = get_object_or_404(
+            Invitation, pk=pk, status_token=token,
+        )
+    else:
+        if not request.user.is_authenticated:
+            raise Http404('invitation not found')
+        invitation = _get_invitation_or_404(request.user, pk)
     ics = _build_ics(invitation)
     if not ics:
         messages.error(request, 'Cannot generate calendar invite — event date is not set.')
@@ -63,12 +84,23 @@ def invitation_send_calendar(request, pk):
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     raw_emails = request.POST.get('recipients', '')
     recipients = [e.strip() for e in raw_emails.replace(';', ',').split(',') if e.strip()]
 
     if not recipients:
         messages.error(request, 'At least one recipient email is required.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    if len(recipients) > MAX_EMAIL_RECIPIENTS:
+        messages.error(
+            request,
+            f'Calendar invites cap at {MAX_EMAIL_RECIPIENTS} recipients per send.',
+        )
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    if _email_rate_limited(request.user):
+        messages.error(request, 'Email send limit reached. Try again later.')
         return redirect('yeoman:invitation_detail', pk=pk)
 
     ics = _build_ics(invitation)
@@ -96,7 +128,9 @@ def invitation_send_calendar(request, pk):
     body_lines.append('')
     body_lines.append('A calendar invite is attached.')
     body = '\n'.join(body_lines)
-    html_body = body.replace('\n', '<br>')
+    # Escape before \n → <br> so attacker-controlled invitation fields
+    # (venue_name etc.) cannot inject HTML into the outgoing email.
+    html_body = _html_escape(body).replace('\n', '<br>')
 
     try:
         email = EmailMultiAlternatives(

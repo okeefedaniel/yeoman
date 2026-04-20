@@ -1,14 +1,18 @@
 from itertools import chain
 from operator import attrgetter
 
+import time
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.html import escape as _html_escape
 from django.views.generic import ListView, DetailView, UpdateView
 
 from keel.notifications.dispatch import notify
@@ -16,6 +20,42 @@ from keel.notifications.dispatch import notify
 from yeoman.forms import InvitationStaffForm
 from yeoman.models import Invitation, InvitationNote
 from yeoman.workflow import STATUS_DISPLAY
+
+
+MAX_EMAIL_RECIPIENTS = 10
+EMAIL_RATE_LIMIT = 10  # sends per user per hour
+EMAIL_RATE_WINDOW_SECONDS = 3600
+
+
+def _get_invitation_or_404(user, pk):
+    """Resolve an invitation scoped to the requesting user.
+
+    Raises ``Http404`` (rather than ``PermissionDenied``) so a zone-scoped
+    user cannot enumerate invitation UUIDs via a 403/404 oracle.
+    """
+    try:
+        return Invitation.objects.for_user(user).select_related(
+            'agency', 'assigned_to', 'delegated_to', 'created_by',
+        ).get(pk=pk)
+    except Invitation.DoesNotExist:
+        raise Http404('invitation not found')
+
+
+def _email_rate_limited(user) -> bool:
+    """Return True if the user has exceeded the send-email rate budget.
+
+    Keyed per user+hour to prevent mass-phishing via invitation_send_email /
+    invitation_send_calendar.
+    """
+    key = f'yeoman:email_send:{user.pk}'
+    bucket = cache.get(key) or []
+    now = time.time()
+    bucket = [t for t in bucket if now - t < EMAIL_RATE_WINDOW_SECONDS]
+    if len(bucket) >= EMAIL_RATE_LIMIT:
+        return True
+    bucket.append(now)
+    cache.set(key, bucket, timeout=EMAIL_RATE_WINDOW_SECONDS)
+    return False
 
 # Map target status to notification event key
 STATUS_NOTIFICATIONS = {
@@ -122,7 +162,7 @@ class InvitationDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'invitation'
 
     def get_queryset(self):
-        return super().get_queryset().select_related(
+        return Invitation.objects.for_user(self.request.user).select_related(
             'assigned_to', 'principal', 'delegated_to', 'delegated_by',
             'agency', 'created_by', 'calendar_sent_by',
         )
@@ -181,6 +221,9 @@ class InvitationUpdateView(LoginRequiredMixin, UpdateView):
     form_class = InvitationStaffForm
     template_name = 'yeoman/invitation_edit.html'
 
+    def get_queryset(self):
+        return Invitation.objects.for_user(self.request.user)
+
     def get_success_url(self):
         return reverse('yeoman:invitation_detail', kwargs={'pk': self.object.pk})
 
@@ -206,7 +249,7 @@ def invitation_transition(request, pk):
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     target_status = request.POST.get('target_status')
     comment = request.POST.get('comment', '').strip()
 
@@ -241,7 +284,7 @@ def invitation_claim(request, pk):
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
 
     if invitation.assigned_to is not None:
         messages.warning(request, 'This invitation is already assigned.')
@@ -266,7 +309,7 @@ def invitation_unclaim(request, pk):
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     old_assignee = invitation.assigned_to
 
     invitation.assigned_to = None
@@ -288,7 +331,7 @@ def invitation_add_note(request, pk):
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     content = request.POST.get('content', '').strip()
 
     if not content:
@@ -325,7 +368,7 @@ def invitation_beacon_toggle(request, pk):
         messages.error(request, 'Beacon integration is not configured.')
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     decision = request.POST.get('decision', '')
 
     if decision == 'added':
@@ -362,12 +405,20 @@ def invitation_send_email(request, pk):
     if request.method != 'POST':
         return redirect('yeoman:invitation_detail', pk=pk)
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     subject = request.POST.get('subject', '').strip()
     body = request.POST.get('body', '').strip()
 
     if not subject or not body:
         messages.error(request, 'Both subject and message are required.')
+        return redirect('yeoman:invitation_detail', pk=pk)
+
+    if _email_rate_limited(request.user):
+        messages.error(
+            request,
+            f'Email send limit reached ({EMAIL_RATE_LIMIT}/hour). '
+            'Try again later.',
+        )
         return redirect('yeoman:invitation_detail', pk=pk)
 
     from django.core.mail import EmailMultiAlternatives
@@ -382,7 +433,11 @@ def invitation_send_email(request, pk):
             to=[invitation.submitter_email],
             reply_to=[request.user.email] if request.user.email else [],
         )
-        html_body = body.replace('\n', '<br>')
+        # HTML-escape every character before converting \n → <br> so a
+        # staff member (or attacker with a staff account) cannot inject
+        # markup into the outbound message and weaponize gov-domain
+        # sender reputation for phishing.
+        html_body = _html_escape(body).replace('\n', '<br>')
         email.attach_alternative(
             f'<div style="font-family:sans-serif;line-height:1.5">{html_body}</div>',
             'text/html',
@@ -412,7 +467,7 @@ def invitation_delegate(request, pk):
     from django.contrib.auth import get_user_model
     User = get_user_model()
 
-    invitation = get_object_or_404(Invitation, pk=pk)
+    invitation = _get_invitation_or_404(request.user, pk)
     delegate_id = request.POST.get('delegate_to')
     notes = request.POST.get('notes', '')
 

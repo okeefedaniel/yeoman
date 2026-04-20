@@ -31,14 +31,23 @@ def push_invitation(invitation):
     Returns the new/updated Beacon contact id. Raises on error.
     """
     url = settings.BEACON_INTAKE_URL.rstrip('/')
+    public_base = getattr(settings, 'YEOMAN_PUBLIC_URL', '').rstrip('/')
+    source_url = (
+        f'{public_base}/invitations/{invitation.pk}/' if public_base else ''
+    )
     payload = {
         'first_name': invitation.submitter_first_name,
         'last_name': invitation.submitter_last_name,
         'email': invitation.submitter_email,
         'phone': invitation.submitter_phone,
         'organization': invitation.submitter_organization,
-        'source': 'yeoman',
+        # Canonical provenance (see keel/CLAUDE.md § Cross-Product Linkage)
+        'source_product': 'yeoman',
+        'source_url': source_url,
+        'source_record_id': str(invitation.pk),
         'source_label': f'Invitation: {invitation.event_name}'[:255],
+        # Legacy field kept for back-compat with older Beacon deployments
+        'source': 'yeoman',
         'notes': (
             f'Submitted invitation for "{invitation.event_name}" '
             f'on {invitation.event_date.isoformat()}.'
