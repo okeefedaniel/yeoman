@@ -83,4 +83,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ).count()
 
         ctx['STATUS_DISPLAY'] = STATUS_DISPLAY
+
+        from django.urls import reverse
+        list_url = reverse('yeoman:invitation_list')
+        ctx['needs_attention_url'] = (
+            f'{list_url}?status=needs_attention' if ctx['needs_attention'] else list_url
+        )
         return ctx
