@@ -86,7 +86,7 @@
           {% for row in by_format %}
           <div class="list-group-item d-flex justify-content-between">
             <span>{{ row.event_format }}</span>
-            <span class="badge bg-primary rounded-pill">{{ row.count }}</span>
+            <span class="pill pill-navy">{{ row.count }}</span>
           </div>
           {% endfor %}
         </div>
@@ -99,7 +99,7 @@
           {% for row in top_orgs %}
           <div class="list-group-item d-flex justify-content-between">
             <span class="small">{{ row.submitter_organization|truncatechars:30 }}</span>
-            <span class="badge bg-secondary rounded-pill">{{ row.count }}</span>
+            <span class="pill pill-muted">{{ row.count }}</span>
           </div>
           {% endfor %}
         </div>

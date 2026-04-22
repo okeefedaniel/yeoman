@@ -181,7 +181,7 @@
           {% for status_key, display in STATUS_DISPLAY.items %}
           <a href="{% url 'yeoman:invitation_list' %}?status={{ status_key }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
             <span>{% status_badge status_key %}</span>
-            <span class="badge bg-light text-dark">{{ status_counts|dict_get:status_key }}</span>
+            <span class="pill pill-muted">{{ status_counts|dict_get:status_key }}</span>
           </a>
           {% endfor %}
         </div>

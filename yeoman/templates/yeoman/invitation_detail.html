@@ -14,7 +14,7 @@
       <h2 class="mt-2 mb-1">{{ invitation.event_name }}</h2>
       <div class="d-flex gap-2 align-items-center">
         {% status_badge invitation.status %}
-        <span class="badge bg-{{ invitation.priority|priority_class }}">{{ invitation.get_priority_display }}</span>
+        <span class="pill bg-{{ invitation.priority|priority_class }}">{{ invitation.get_priority_display }}</span>
         <span class="text-muted small">{{ invitation.get_event_format_display }} &middot; {{ invitation.get_modality_display }}</span>
       </div>
     </div>
@@ -291,7 +291,7 @@
           {% if invitation.calendar_pushed_at %}
           <div class="mb-3">
             <div class="small text-muted text-uppercase">Calendar Invite</div>
-            <span class="badge bg-success">Sent</span>
+            <span class="pill pill-success">Sent</span>
             <div class="small text-muted mt-1">
               {{ invitation.calendar_pushed_at|date:"M d, Y g:i A" }}<br>
               To: {{ invitation.calendar_sent_to|default:"—" }}
@@ -311,7 +311,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
           <span><i class="bi bi-calendar-plus me-2"></i>Calendar Invite</span>
           {% if invitation.calendar_pushed_at %}
-            <span class="badge bg-success">Sent</span>
+            <span class="pill pill-success">Sent</span>
           {% endif %}
         </div>
         <div class="card-body">
@@ -357,11 +357,11 @@
         <div class="card-header d-flex justify-content-between align-items-center">
           <span><i class="bi bi-broadcast me-2"></i>Beacon</span>
           {% if invitation.beacon_status == 'added' %}
-            <span class="badge bg-success">Added</span>
+            <span class="pill pill-success">Added</span>
           {% elif invitation.beacon_status == 'declined' %}
-            <span class="badge bg-secondary">Skipped</span>
+            <span class="pill pill-muted">Skipped</span>
           {% else %}
-            <span class="badge bg-light text-dark border">Undecided</span>
+            <span class="pill pill-muted border">Undecided</span>
           {% endif %}
         </div>
         <div class="card-body">

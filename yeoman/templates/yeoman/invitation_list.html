@@ -85,7 +85,7 @@
               <td class="{% if inv.is_past %}text-danger{% endif %}">{{ inv.event_date|date:"M d, Y"|default:"TBD" }}</td>
               <td class="small">{{ inv.get_event_format_display }}</td>
               <td>{% status_badge inv.status %}</td>
-              <td><span class="badge bg-{{ inv.priority|priority_class }}">{{ inv.get_priority_display }}</span></td>
+              <td><span class="pill bg-{{ inv.priority|priority_class }}">{{ inv.get_priority_display }}</span></td>
               <td class="small text-muted">{{ inv.submitter_name }}</td>
               <td class="small">{{ inv.assigned_to|default:"—" }}</td>
               <td>
