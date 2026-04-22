@@ -121,8 +121,9 @@ def main():
         return
 
     # Run migrations
+    # MUST be fatal — see keel/CLAUDE.md "Startup failures MUST be fatal."
     log("=== Running migrations ===")
-    run(f"{manage_cmd} migrate --noinput")
+    run(f"{manage_cmd} migrate --noinput", fatal=True)
 
     # Ensure django.contrib.sites has the correct Site record (required by allauth)
     log("=== Configuring Site object ===")
