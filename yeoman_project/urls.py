@@ -8,6 +8,7 @@ from keel.core.demo import demo_login_view
 from keel.core.views import SuiteLogoutView, favicon_view, health_check, robots_txt
 from keel.core.search_views import search_view
 from yeoman.helm_feed import yeoman_helm_feed
+from yeoman.helm_inbox import yeoman_helm_feed_inbox
 from yeoman.api.intake import invitation_intake
 from yeoman.forms import LoginForm
 
@@ -40,6 +41,7 @@ urlpatterns = [
     path('auth/', include('allauth.urls')),
     # Helm executive dashboard feed
     path('api/v1/helm-feed/', yeoman_helm_feed, name='helm-feed'),
+    path('api/v1/helm-feed/inbox/', yeoman_helm_feed_inbox, name='helm-feed-inbox'),
     # External intake API (dokeefect.com → Yeoman)
     path('api/v1/intake/invitation/', invitation_intake, name='intake-invitation'),
     path('', include('yeoman.urls')),
