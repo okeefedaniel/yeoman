@@ -5,6 +5,7 @@ import urllib.parse
 import urllib.request
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils import timezone
@@ -150,16 +151,50 @@ def invitation_intake(request):
     )
     invitation.save()
 
-    # Notify admins/schedulers (same as PublicInviteView)
-    notify(
+    # Notify admins/schedulers (same as PublicInviteView). Fall back to
+    # is_staff users if no user holds a yeoman_admin / yeoman_scheduler
+    # role — a successful intake that produces zero notifications is the
+    # worst possible outcome (the work item exists but no one knows).
+    User = get_user_model()
+    role_recipients = list(
+        User.objects.filter(
+            is_active=True,
+            product_access__product='yeoman',
+            product_access__role__in=['yeoman_admin', 'yeoman_scheduler'],
+            product_access__is_active=True,
+        ).distinct()
+    )
+    if not role_recipients:
+        fallback = list(User.objects.filter(is_active=True, is_staff=True))
+        if fallback:
+            logger.warning(
+                'No yeoman_admin/yeoman_scheduler users for invitation %s; '
+                'falling back to %d is_staff users',
+                invitation.pk, len(fallback),
+            )
+        else:
+            logger.error(
+                'No notification recipients for invitation %s '
+                '(no admins, no staff users)', invitation.pk,
+            )
+        recipients = fallback
+    else:
+        recipients = role_recipients
+
+    result = notify(
         event='invitation_received',
+        recipients=recipients,
         context={'invitation': invitation},
         title=str(invitation.event_name),
         message=f'New invitation from {invitation.submitter_name} ({invitation.submitter_organization}) via dokeefect.com.',
         link=f'/invitations/{invitation.pk}/',
     )
-
-    logger.info('Intake API created invitation %s from %s', invitation.pk, d['email'])
+    logger.info(
+        'Intake API created invitation %s from %s '
+        '(notify: sent=%s skipped=%s errors=%s)',
+        invitation.pk, d['email'],
+        result['sent'], result['skipped'], result['errors'],
+    )
 
     # Compute distances from reference addresses (non-blocking — errors don't fail the request)
     distances = _compute_distances(d.get('location', ''), agency)
