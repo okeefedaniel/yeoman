@@ -18,7 +18,7 @@ from .helm_feed import _product_url
 
 # Statuses where the invitation still needs human attention. Anything
 # not in this set is either terminal or doesn't require user action.
-_OPEN_STATUSES = ['received', 'in_review', 'accepted']
+_OPEN_STATUSES = ['received', 'under_review', 'accepted']
 
 
 @helm_inbox_view

@@ -1,0 +1,645 @@
+{% extends "base.html" %}
+
+{% block page_title %}User Manual{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .manual-nav {
+        position: sticky;
+        top: 80px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+    .manual-nav .nav-link {
+        color: var(--text-secondary, #4a5568);
+        padding: 0.35rem 0.75rem;
+        font-size: 0.875rem;
+        border-left: 3px solid transparent;
+        border-radius: 0;
+    }
+    .manual-nav .nav-link:hover,
+    .manual-nav .nav-link.active {
+        color: var(--ct-blue, #1565c0);
+        border-left-color: var(--ct-blue, #1565c0);
+        background-color: rgba(21, 101, 192, 0.06);
+    }
+    .manual-section {
+        scroll-margin-top: 90px;
+    }
+    .manual-section h2 {
+        border-bottom: 2px solid #cfd8dc;
+        padding-bottom: 0.5rem;
+    }
+    .manual-section h3 {
+        color: #1565c0;
+    }
+    .role-pill {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+    .role-admin      { background-color: #263238; color: #ffffff; }
+    .role-scheduler  { background-color: #e3f2fd; color: #1565c0; }
+    .role-delegate   { background-color: #ede7f6; color: #4527a0; }
+    .role-viewer     { background-color: #e8f5e9; color: #2e7d32; }
+    .pointer-coordinator { background-color: #fff3e0; color: #e65100; }
+    .pointer-principal   { background-color: #e8eaf6; color: #283593; }
+    .pointer-delegate    { background-color: #ede7f6; color: #4527a0; }
+    .workflow-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.75rem 0;
+    }
+    .workflow-step .step-num {
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background-color: #1565c0;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+    .status-flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .status-flow .badge {
+        font-size: 0.8125rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+<div class="row">
+    <!-- Sidebar nav (desktop) -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <nav class="manual-nav" aria-label="Manual sections">
+            <h6 class="fw-bold text-uppercase text-muted small mb-3 px-2">Contents</h6>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link" href="#overview"><i class="bi bi-house me-2"></i>Overview</a></li>
+                <li class="nav-item"><a class="nav-link" href="#roles"><i class="bi bi-shield-lock me-2"></i>Roles</a></li>
+                <li class="nav-item"><a class="nav-link" href="#getting-started"><i class="bi bi-rocket-takeoff me-2"></i>Getting Started</a></li>
+                <li class="nav-item"><a class="nav-link" href="#dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="#invitations"><i class="bi bi-envelope me-2"></i>Invitations</a></li>
+                <li class="nav-item"><a class="nav-link" href="#workflow"><i class="bi bi-diagram-3 me-2"></i>Workflow &amp; Status</a></li>
+                <li class="nav-item"><a class="nav-link" href="#assignment"><i class="bi bi-people me-2"></i>Assignment &amp; Delegation</a></li>
+                <li class="nav-item"><a class="nav-link" href="#notes"><i class="bi bi-journal-text me-2"></i>Notes &amp; Attachments</a></li>
+                <li class="nav-item"><a class="nav-link" href="#calendar"><i class="bi bi-calendar2-week me-2"></i>Calendar &amp; iCal</a></li>
+                <li class="nav-item"><a class="nav-link" href="#map"><i class="bi bi-geo-alt me-2"></i>Map</a></li>
+                <li class="nav-item"><a class="nav-link" href="#intake"><i class="bi bi-globe me-2"></i>Public Intake</a></li>
+                <li class="nav-item"><a class="nav-link" href="#reports"><i class="bi bi-graph-up me-2"></i>Reports &amp; Exports</a></li>
+                <li class="nav-item"><a class="nav-link" href="#beacon"><i class="bi bi-person-plus me-2"></i>Beacon Sync</a></li>
+                <li class="nav-item"><a class="nav-link" href="#helm"><i class="bi bi-inbox me-2"></i>Helm Inbox</a></li>
+                <li class="nav-item"><a class="nav-link" href="#notifications"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+                <li class="nav-item"><a class="nav-link" href="#principal"><i class="bi bi-person-badge me-2"></i>Principal Settings</a></li>
+                <li class="nav-item"><a class="nav-link" href="#statuses"><i class="bi bi-list-check me-2"></i>Status Reference</a></li>
+                <li class="nav-item"><a class="nav-link" href="#shortcuts"><i class="bi bi-keyboard me-2"></i>Keyboard Shortcuts</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-lg-9">
+
+        <!-- Mobile TOC -->
+        <div class="d-lg-none mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <button class="btn btn-outline-primary btn-sm w-100" type="button" data-bs-toggle="collapse" data-bs-target="#mobileToc">
+                        <i class="bi bi-list me-2"></i>Table of Contents
+                    </button>
+                    <div class="collapse mt-3" id="mobileToc">
+                        <div class="list-group list-group-flush">
+                            <a href="#overview" class="list-group-item list-group-item-action small">Overview</a>
+                            <a href="#roles" class="list-group-item list-group-item-action small">Roles</a>
+                            <a href="#getting-started" class="list-group-item list-group-item-action small">Getting Started</a>
+                            <a href="#dashboard" class="list-group-item list-group-item-action small">Dashboard</a>
+                            <a href="#invitations" class="list-group-item list-group-item-action small">Invitations</a>
+                            <a href="#workflow" class="list-group-item list-group-item-action small">Workflow &amp; Status</a>
+                            <a href="#assignment" class="list-group-item list-group-item-action small">Assignment &amp; Delegation</a>
+                            <a href="#notes" class="list-group-item list-group-item-action small">Notes &amp; Attachments</a>
+                            <a href="#calendar" class="list-group-item list-group-item-action small">Calendar &amp; iCal</a>
+                            <a href="#map" class="list-group-item list-group-item-action small">Map</a>
+                            <a href="#intake" class="list-group-item list-group-item-action small">Public Intake</a>
+                            <a href="#reports" class="list-group-item list-group-item-action small">Reports &amp; Exports</a>
+                            <a href="#beacon" class="list-group-item list-group-item-action small">Beacon Sync</a>
+                            <a href="#helm" class="list-group-item list-group-item-action small">Helm Inbox</a>
+                            <a href="#notifications" class="list-group-item list-group-item-action small">Notifications</a>
+                            <a href="#principal" class="list-group-item list-group-item-action small">Principal Settings</a>
+                            <a href="#statuses" class="list-group-item list-group-item-action small">Status Reference</a>
+                            <a href="#shortcuts" class="list-group-item list-group-item-action small">Keyboard Shortcuts</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold mb-1">Yeoman User Manual</h1>
+                <p class="text-muted mb-0">Comprehensive guide to speaking-engagement and event-scheduling workflows in the DockLabs suite.</p>
+            </div>
+            <a href="{% url 'help' %}" class="btn btn-outline-primary btn-sm" title="Open the FAQ">
+                <i class="bi bi-question-circle me-1"></i> FAQ
+            </a>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- OVERVIEW -->
+        <!-- ============================================================== -->
+        <section id="overview" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-house me-2 text-primary"></i>Overview</h2>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4 lh-lg">
+                    <p>Yeoman is the speaking-engagement and event-scheduling product in the DockLabs suite. It moves an invitation — for a hearing, keynote, panel, ribbon-cutting, site visit, or any other ask on the principal's time — through public intake, triage, decision, delegation, calendar push, and completion, with a full audit trail.</p>
+                    <p class="small text-muted mb-0">The lifecycle: <strong>public intake → triage → decision (accept / tentative / decline) → optional delegation → calendar push → completion</strong>. Yeoman doesn't store bills, FOIA requests, or grants — those live in the products that own them.</p>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-envelope-paper text-primary fs-5 mt-1"></i>
+                                <div>
+                                    <strong>Public intake</strong>
+                                    <p class="small text-muted mb-0">A self-serve form anyone can submit, with a status URL the submitter can revisit.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-diagram-3 text-primary fs-5 mt-1"></i>
+                                <div>
+                                    <strong>Workflow engine</strong>
+                                    <p class="small text-muted mb-0">Every transition role-gated and audited via Keel's <code>WorkflowEngine</code>.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-calendar2-week text-primary fs-5 mt-1"></i>
+                                <div>
+                                    <strong>Calendar &amp; iCal</strong>
+                                    <p class="small text-muted mb-0">Push to Outlook / Exchange / Google. Per-invitation .ics download. Email a calendar invite to anyone.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-geo-alt text-primary fs-5 mt-1"></i>
+                                <div>
+                                    <strong>Map &amp; distance</strong>
+                                    <p class="small text-muted mb-0">Auto-geocoded venues, geographic plot, and driving distance from named reference addresses.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- ROLES -->
+        <!-- ============================================================== -->
+        <section id="roles" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-shield-lock me-2 text-primary"></i>Roles</h2>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <p>Yeoman roles are issued via Keel SSO and surfaced in your sidebar profile.</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr><th>Role</th><th>Capability</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="role-pill role-admin">Administrator</span></td>
+                                    <td>Full access. Triage, decide, delegate, schedule, complete, cancel, reopen. Manages the principal profile and reference addresses.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-pill role-scheduler">Scheduler</span></td>
+                                    <td>Operates the queue. Starts review, requests info, pushes to calendar, completes, and cancels. Cannot accept / decline / delegate.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-pill role-delegate">Delegate</span></td>
+                                    <td>Reads invitations delegated to them. Receives delegation notifications.</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="role-pill role-viewer">Viewer</span></td>
+                                    <td>Read-only across the dashboard, list, and calendar.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="small text-muted mt-3 mb-0">Suite-level <code>system_admin</code> inherits Administrator behavior on Yeoman.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- GETTING STARTED -->
+        <!-- ============================================================== -->
+        <section id="getting-started" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-rocket-takeoff me-2 text-primary"></i>Getting Started</h2>
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4 lh-lg">
+                    <h5 class="fw-bold"><i class="bi bi-box-arrow-in-right me-2 text-primary"></i>Signing in</h5>
+                    <div class="workflow-step">
+                        <span class="step-num">1</span>
+                        <span>From any DockLabs product, click <strong>Yeoman</strong> in the fleet switcher, or visit <code>https://yeoman.docklabs.ai/</code>.</span>
+                    </div>
+                    <div class="workflow-step">
+                        <span class="step-num">2</span>
+                        <span>Click <strong>Sign in with DockLabs</strong> (the suite OIDC button).</span>
+                    </div>
+                    <div class="workflow-step">
+                        <span class="step-num">3</span>
+                        <span>You'll land on <code>/dashboard/</code>.</span>
+                    </div>
+                    <div class="alert alert-info border-0 small mt-3 mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Yeoman keeps allauth mounted at <code>/auth/</code> (preserving the registered OIDC redirect URI), while the canonical login form lives at <code>/accounts/login/</code> like the rest of the suite. The legacy <code>/auth/login/</code> 301-redirects to the canonical path.
+                    </div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 lh-lg">
+                    <h5 class="fw-bold"><i class="bi bi-eye me-2 text-primary"></i>What you'll see first</h5>
+                    <ul class="mb-0">
+                        <li><strong>Dashboard</strong> — counts by status, your queue, today's events, and upcoming events.</li>
+                        <li><strong>Invitations</strong> — full list with filters.</li>
+                        <li><strong>Calendar</strong> — month/week/day view of every event.</li>
+                        <li><strong>Map</strong> — geographic plot of in-person events.</li>
+                        <li><strong>Reports</strong> — activity rollups and CSV export.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- DASHBOARD -->
+        <!-- ============================================================== -->
+        <section id="dashboard" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</h2>
+            <p><code>/dashboard/</code> — the staff landing page. Surfaces:</p>
+            <ul class="mb-0">
+                <li><strong>Status counters</strong> — quick view of how many invitations sit in Received, Under Review, Needs Info, Accepted, Tentative, Scheduled, Delegated, Declined, Completed, Cancelled.</li>
+                <li><strong>My queue</strong> — invitations where you are the assignee, the principal, or the delegate, ordered by event date.</li>
+                <li><strong>Today</strong> — events happening today.</li>
+                <li><strong>Upcoming</strong> — the next 7–30 days.</li>
+            </ul>
+            <p class="small text-muted mt-2">The dashboard is read-oriented; click any invitation to act on it.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- INVITATIONS -->
+        <!-- ============================================================== -->
+        <section id="invitations" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-envelope me-2 text-primary"></i>Invitations</h2>
+            <p><code>/invitations/</code> — the operational list of every invitation in your agency, with filters for status, priority, format, modality, date range, assignee, and tag.</p>
+
+            <h3 class="fw-bold mt-4">Anatomy of an invitation</h3>
+            <p>Each invitation carries:</p>
+            <ul>
+                <li><strong>Submitter info</strong> — first/last name, email, phone, organization, title.</li>
+                <li><strong>Event details</strong> — name, description, date, start/end time, timezone, format, modality.</li>
+                <li><strong>Location</strong> — venue name, full address, lat/lng (auto-geocoded), or virtual platform + link.</li>
+                <li><strong>Assignment</strong> — assigned coordinator, principal, and optional delegate.</li>
+                <li><strong>Priority</strong> — Low, Normal, High, Urgent.</li>
+                <li><strong>Tags</strong> — agency-defined labels (e.g. <code>legislative</code>, <code>economic-dev</code>, <code>education</code>).</li>
+                <li><strong>Logistics</strong> — expected attendees, surrogate-OK flag, press expected, will-be-recorded.</li>
+                <li><strong>Outcome</strong> — decline reason, calendar event ID, push timestamp, calendar invite recipients.</li>
+                <li><strong>Status history</strong> — every transition logged with actor and comment.</li>
+                <li><strong>Attachments</strong> — uploaded files (briefing materials, agendas, related decks).</li>
+                <li><strong>Notes</strong> — internal staff notes.</li>
+                <li><strong>Beacon status</strong> — has the submitter been pushed to Beacon as a contact?</li>
+                <li><strong>Status token</strong> — UUID powering the public submitter status page.</li>
+            </ul>
+
+            <h3 class="fw-bold mt-4">Format options</h3>
+            <p class="mb-0">Presentation, Keynote, Panel Moderator, Panel Participant, Site Visit, Roundtable, Ribbon Cutting, Meeting, Reception, Conference, Fireside Chat, Tour, Other.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- WORKFLOW -->
+        <!-- ============================================================== -->
+        <section id="workflow" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-diagram-3 me-2 text-primary"></i>Workflow &amp; Status</h2>
+            <p>Yeoman uses Keel's <code>WorkflowEngine</code> for every state change. Each transition writes an immutable <code>InvitationStatusHistory</code> row capturing the actor, the from/to status, the timestamp, and any comment.</p>
+
+            <div class="card bg-light border-0 mb-3">
+                <div class="card-body small">
+<pre class="mb-0">received → under_review → needs_info → under_review
+                       ↓
+                       → accepted
+                       → tentative
+                       → declined (comment required)
+
+tentative → accepted
+tentative → declined (comment required)
+
+accepted  → delegated
+tentative → delegated
+
+accepted  → scheduled  (push to calendar)
+tentative → scheduled
+delegated → scheduled
+
+scheduled → completed
+
+(any open status) → cancelled
+declined  → under_review (Reopen)
+cancelled → under_review (Reopen)</pre>
+                </div>
+            </div>
+
+            <h3 class="fw-bold mt-4">Who can do what</h3>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr><th>Transition</th><th>Required role</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Start Review, Request Info, Info Received</td><td>Scheduler or Administrator</td></tr>
+                                <tr><td>Accept, Mark Tentative, Confirm</td><td>Administrator</td></tr>
+                                <tr><td>Decline (any path)</td><td>Administrator (comment required)</td></tr>
+                                <tr><td>Delegate</td><td>Administrator</td></tr>
+                                <tr><td>Push to Calendar / Confirm &amp; Schedule</td><td>Scheduler or Administrator</td></tr>
+                                <tr><td>Complete</td><td>Scheduler or Administrator</td></tr>
+                                <tr><td>Cancel</td><td>Scheduler or Administrator</td></tr>
+                                <tr><td>Reopen</td><td>Administrator</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- ASSIGNMENT / DELEGATION -->
+        <!-- ============================================================== -->
+        <section id="assignment" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-people me-2 text-primary"></i>Assignment, Principal &amp; Delegation</h2>
+            <p>Yeoman tracks three independent user pointers on every invitation:</p>
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr><th>Pointer</th><th>Who it points to</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="role-pill pointer-coordinator">assigned_to</span></td><td><strong>Coordinator</strong> — the staff member managing logistics and submitter communication. Set via <strong>Claim</strong>; cleared via <strong>Unclaim</strong>.</td></tr>
+                                <tr><td><span class="role-pill pointer-principal">principal</span></td><td><strong>Speaker</strong> — the Commissioner or agency head whose time is being scheduled.</td></tr>
+                                <tr><td><span class="role-pill pointer-delegate">delegated_to</span></td><td><strong>Stand-in</strong> — when the principal can't attend, an Administrator delegates to a deputy.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="fw-bold mt-4">Claim / Unclaim</h3>
+            <p>Open an invitation → click <strong>Claim</strong> to take ownership. You become <code>assigned_to</code>. Click <strong>Unclaim</strong> to release; the invitation returns to the pool.</p>
+
+            <h3 class="fw-bold mt-4">Delegate</h3>
+            <p class="mb-0">From an Accepted or Tentative invitation, an Administrator picks a delegate, optionally adds delegation notes, and the invitation moves to the <strong>Delegated</strong> status. The delegate receives an <code>invitation_delegated</code> notification. The full chain is preserved in <code>DelegationLog</code> on the invitation detail page.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- NOTES / ATTACHMENTS -->
+        <!-- ============================================================== -->
+        <section id="notes" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-journal-text me-2 text-primary"></i>Notes &amp; Attachments</h2>
+
+            <h3 class="fw-bold mt-2">Notes</h3>
+            <p>Internal staff notes live alongside the invitation (<code>InvitationNote</code>). Notes are staff-only — submitters never see them. Use them for internal reasoning, conflicts to flag, or coordination context.</p>
+
+            <h3 class="fw-bold mt-4">Attachments</h3>
+            <p>Drag-and-drop file uploads on the invitation detail page. Each attachment carries an original filename, content type, size, the user who uploaded it, a flag distinguishing staff-uploaded from submitter-uploaded files, and an optional label.</p>
+            <p class="small text-muted mb-0">Files are scanned by <code>keel.security.FileSecurityValidator</code> on upload to enforce size and extension policy.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- CALENDAR -->
+        <!-- ============================================================== -->
+        <section id="calendar" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-calendar2-week me-2 text-primary"></i>Calendar &amp; iCal</h2>
+            <p><code>/calendar/</code> — month/week/day FullCalendar view of every invitation with an event_date, color-coded by status. Click any event to open the invitation detail page.</p>
+
+            <h3 class="fw-bold mt-4">Per-invitation iCal export</h3>
+            <p><code>/invitations/&lt;uuid&gt;/ical/</code> — download a single <code>.ics</code> file for an invitation. Useful when you want to forward an event to someone outside the suite without granting them Yeoman access.</p>
+
+            <h3 class="fw-bold mt-4">Send calendar invite</h3>
+            <p><code>/invitations/&lt;uuid&gt;/send-calendar/</code> — email a calendar invite (via <code>keel.calendar</code>) to one or more recipients. The recipients are stored on the invitation in <code>calendar_sent_to</code> along with the time and the sender, so future audits can see who got it.</p>
+
+            <h3 class="fw-bold mt-4">Push to external calendar</h3>
+            <p class="mb-0">Invitations in <strong>Accepted</strong>, <strong>Tentative</strong>, or <strong>Delegated</strong> status can be pushed to Outlook / Exchange via <code>keel.calendar.push_event</code>. The external event ID is stored as <code>calendar_event_id</code> and the timestamp as <code>calendar_pushed_at</code>. Cancelling a Scheduled invitation calls back to <code>cancel_event</code> so the external event is removed.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- MAP -->
+        <!-- ============================================================== -->
+        <section id="map" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-primary"></i>Map</h2>
+            <p><code>/map/</code> — geographic plot of in-person and hybrid invitations. Each marker is one invitation, colored by status. Use it to spot scheduling clusters, evaluate driving distance from the principal's reference addresses, and plan travel days.</p>
+            <p class="small text-muted mb-0">Geocoding runs automatically on save when a venue address is present and coordinates are not yet recorded. If geocoding fails, the invitation is still created — it just doesn't appear on the map until staff fix the address.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- INTAKE -->
+        <!-- ============================================================== -->
+        <section id="intake" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-globe me-2 text-primary"></i>Public Intake</h2>
+            <p><code>/invite/</code> — the public-facing form anyone can use to request the principal's time. Captures submitter identity, event details, location/virtual fields, attachments, and contextual flags (press expected, will-be-recorded, surrogate-OK).</p>
+
+            <h3 class="fw-bold mt-4">What happens on submission</h3>
+            <div class="workflow-step"><span class="step-num">1</span><span>Yeoman creates an <code>Invitation</code> row in the <strong>received</strong> status.</span></div>
+            <div class="workflow-step"><span class="step-num">2</span><span>Geocodes the venue address if present.</span></div>
+            <div class="workflow-step"><span class="step-num">3</span><span>Fires an <code>invitation_received</code> notification to schedulers and administrators in the agency.</span></div>
+            <div class="workflow-step"><span class="step-num">4</span><span>Issues a <code>status_token</code> UUID to the submitter so they can return to <code>/invite/status/&lt;token&gt;/</code> and check progress without logging in.</span></div>
+            <div class="workflow-step"><span class="step-num">5</span><span>(If configured) Pushes the submitter to Beacon as a contact.</span></div>
+
+            <h3 class="fw-bold mt-4">Programmatic intake</h3>
+            <p><code>/api/v1/intake/invitation/</code> — bearer-token auth endpoint for forwarding from another website or a legacy system.</p>
+
+            <h3 class="fw-bold mt-4">Submitter status page</h3>
+            <p class="mb-0"><code>/invite/status/&lt;status_token&gt;/</code> — anyone holding the token URL can see the current status, the assigned coordinator's name (when available), and the event date once confirmed. They cannot see internal notes, attachments other than ones they uploaded themselves, or any information about other invitations.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- REPORTS -->
+        <!-- ============================================================== -->
+        <section id="reports" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-graph-up me-2 text-primary"></i>Reports &amp; Exports</h2>
+            <p><code>/reports/</code> — activity dashboard:</p>
+            <ul>
+                <li>Invitation volume by month / quarter.</li>
+                <li>Acceptance rate.</li>
+                <li>Median time-to-decision and time-to-schedule.</li>
+                <li>Breakdowns by format, modality, and tag.</li>
+                <li>Top organizations and top regions.</li>
+            </ul>
+
+            <h3 class="fw-bold mt-4">CSV export</h3>
+            <p class="mb-0"><code>/reports/export/</code> — download a CSV of every invitation (filtered by the current report parameters) with status, dates, assignee, principal, delegate, format, modality, and outcome fields. Suitable for finance or annual-report rollups.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- BEACON -->
+        <!-- ============================================================== -->
+        <section id="beacon" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-person-plus me-2 text-primary"></i>Beacon CRM Sync</h2>
+            <p>When the suite is deployed with Beacon, Yeoman can push every submitter to Beacon as a contact, capturing the speaking-engagement relationship.</p>
+
+            <h3 class="fw-bold mt-4">Add to Beacon</h3>
+            <p>On an invitation detail page, an Administrator sees an <strong>Add to Beacon</strong> control if <code>BEACON_INTAKE_URL</code> and <code>BEACON_INTAKE_API_KEY</code> are configured. Click it, and Yeoman:</p>
+            <ul>
+                <li>Posts the submitter to Beacon's intake API.</li>
+                <li>Records the resulting Beacon contact ID on the invitation (<code>beacon_contact_id</code>).</li>
+                <li>Sets <code>beacon_status='added'</code> and stamps the time + actor.</li>
+                <li>Drops a provenance entry on the Beacon contact pointing back to this Yeoman invitation.</li>
+            </ul>
+            <div class="alert alert-info border-0 small mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                If Beacon isn't configured, the button is hidden — there are no silent no-ops. The control reappears once Beacon is reachable.
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- HELM INBOX -->
+        <!-- ============================================================== -->
+        <section id="helm" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-inbox me-2 text-primary"></i>Helm Inbox</h2>
+            <p>Yeoman exposes <code>/api/v1/helm-feed/inbox/</code> — Helm's per-user companion endpoint. When you open Helm's <strong>Today</strong> tab, the <strong>Awaiting Me</strong> column queries this endpoint and lists Yeoman invitations where you are the gating dependency:</p>
+            <ul class="mb-0">
+                <li><strong>Coordinate</strong> — open invitations assigned to you.</li>
+                <li><strong>Speak</strong> — open invitations where you are the principal.</li>
+                <li><strong>Cover for</strong> — open invitations delegated to you.</li>
+            </ul>
+            <p class="small text-muted mt-2 mb-0">The event_date drives the due_date. The link returns you to the Yeoman invitation detail page in one hop.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- NOTIFICATIONS -->
+        <!-- ============================================================== -->
+        <section id="notifications" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-bell me-2 text-primary"></i>Notifications</h2>
+            <p>Yeoman's notification catalog (event types you may receive):</p>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr><th>Event</th><th>When it fires</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>invitation_received</code></td><td>A new invitation was submitted via the public form. Routes to schedulers and administrators.</td></tr>
+                                <tr><td><code>invitation_assigned</code></td><td>An invitation was claimed or assigned to you.</td></tr>
+                                <tr><td><code>invitation_delegated</code></td><td>An invitation was delegated to you.</td></tr>
+                                <tr><td><code>invitation_accepted</code></td><td>An invitation was accepted (email channel by default).</td></tr>
+                                <tr><td><code>invitation_declined</code></td><td>An invitation was declined (email channel by default).</td></tr>
+                                <tr><td><code>invitation_scheduled</code></td><td>An invitation was pushed to the calendar.</td></tr>
+                                <tr><td><code>invitation_status_changed</code></td><td>The status of an invitation you're on changed (in-app channel by default).</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <p class="small text-muted mt-3 mb-0">Channels (in-app + email) are user-configurable at <a href="/notifications/preferences/">/notifications/preferences/</a>. The link is in the sidebar user-menu dropdown.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- PRINCIPAL SETTINGS -->
+        <!-- ============================================================== -->
+        <section id="principal" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-person-badge me-2 text-primary"></i>Principal Settings</h2>
+            <p><code>/settings/principal/</code> — Administrator-only configuration of the principal whose time Yeoman is scheduling.</p>
+            <ul>
+                <li><strong>Display name</strong> — e.g. "Commissioner O'Keefe".</li>
+                <li><strong>Title</strong> — e.g. "Commissioner of Economic Development".</li>
+                <li><strong>Email</strong> + <strong>phone</strong> — internal contact info.</li>
+                <li><strong>Notes</strong> — anything reviewers should know (preferred briefing format, dietary needs, etc.).</li>
+                <li><strong>Reference addresses</strong> — named locations (Home, Office, Capitol) used to compute driving distance from incoming invitations. One can be marked the default; sort order controls how they appear on each invitation.</li>
+            </ul>
+            <p class="small text-muted mb-0">There is one principal profile per agency. Multi-principal deployments use multiple agencies.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- STATUS REFERENCE -->
+        <!-- ============================================================== -->
+        <section id="statuses" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-list-check me-2 text-primary"></i>Status Reference</h2>
+
+            <h3 class="fw-bold mt-2">Invitation status flow</h3>
+            <div class="status-flow my-2">
+                <span class="badge bg-secondary">Received</span>
+                <i class="bi bi-arrow-right"></i>
+                <span class="badge bg-primary">Under Review</span>
+                <i class="bi bi-arrow-left-right"></i>
+                <span class="badge bg-warning text-dark">Needs Info</span>
+                <i class="bi bi-arrow-right"></i>
+                <span class="badge bg-success">Accepted</span>
+                <span class="text-muted">/</span>
+                <span class="badge bg-warning text-dark">Tentative</span>
+                <i class="bi bi-arrow-right"></i>
+                <span class="badge bg-info">Delegated</span>
+                <i class="bi bi-arrow-right"></i>
+                <span class="badge bg-purple">Scheduled</span>
+                <i class="bi bi-arrow-right"></i>
+                <span class="badge bg-dark">Completed</span>
+            </div>
+            <p class="small text-muted">Plus terminal exits: <span class="badge bg-danger">Declined</span> (comment required) and <span class="badge bg-secondary">Cancelled</span>. Both are reopenable to <strong>Under Review</strong> by an Administrator.</p>
+
+            <h3 class="fw-bold mt-4">Priority</h3>
+            <p>Low, Normal, High, Urgent. Drives sort in the queue and the priority field on Helm's Awaiting Me payload.</p>
+
+            <h3 class="fw-bold mt-4">Format</h3>
+            <p>Presentation, Keynote, Panel Moderator, Panel Participant, Site Visit, Roundtable, Ribbon Cutting, Meeting, Reception, Conference, Fireside Chat, Tour, Other.</p>
+
+            <h3 class="fw-bold mt-4">Modality</h3>
+            <p class="mb-0">In Person, Virtual, Hybrid.</p>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- KEYBOARD SHORTCUTS -->
+        <!-- ============================================================== -->
+        <section id="shortcuts" class="manual-section mb-5">
+            <h2 class="fw-bold mb-3"><i class="bi bi-keyboard me-2 text-primary"></i>Keyboard Shortcuts</h2>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <kbd>⌘K</kbd> <span class="text-muted">/</span> <kbd>Ctrl+K</kbd>
+                        <span>Open the suite-wide search modal.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer / next steps -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body text-center p-4">
+                <h5 class="fw-bold mb-2">Need a quick answer?</h5>
+                <p class="text-muted mb-3">The FAQ covers the most common questions in 14 short cards.</p>
+                <a href="{% url 'help' %}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-question-circle me-1"></i> Help &amp; FAQ
+                </a>
+                <a href="mailto:info@docklabs.ai" class="btn btn-primary">
+                    <i class="bi bi-envelope me-1"></i> Contact Support
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+{% endblock %}

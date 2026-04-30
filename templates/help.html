@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block page_title %}Help & FAQ{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold mb-1">Help &amp; Frequently Asked Questions</h1>
+                <p class="text-muted mb-0">Quick answers about using Yeoman. For the full reference, see the <a href="{% url 'manual' %}">User Manual</a>.</p>
+            </div>
+            <a href="{% url 'manual' %}" class="btn btn-outline-primary btn-sm" title="Open the full user manual">
+                <i class="bi bi-book me-1"></i> User Manual
+            </a>
+        </div>
+
+        <div class="accordion" id="faqAccordion">
+
+            <!-- Q1: What is Yeoman -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading1">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse1"
+                            aria-expanded="false" aria-controls="faqCollapse1">
+                        <i class="bi bi-calendar-check me-2 text-primary"></i>
+                        What is Yeoman?
+                    </button>
+                </h2>
+                <div id="faqCollapse1" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>Yeoman is the speaking-engagement and event-scheduling product in the DockLabs suite. It moves an invitation — for a hearing, keynote, panel, ribbon-cutting, site visit, fireside chat, or any other ask on the principal's time — through public intake, triage, decision, delegation, calendar push, and completion.</p>
+                        <p class="mb-0">Yeoman is built around one core record (the <strong>Invitation</strong>) and the lifecycle a request travels through. It does not store bills, FOIA requests, or grants; those live in their owning peer products.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q2: How does intake work -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading2">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse2"
+                            aria-expanded="false" aria-controls="faqCollapse2">
+                        <i class="bi bi-envelope-paper me-2 text-primary"></i>
+                        How does an invitation arrive in Yeoman?
+                    </button>
+                </h2>
+                <div id="faqCollapse2" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>Two paths:</p>
+                        <ol>
+                            <li><strong>Public intake form</strong> at <code>/invite/</code>. Anyone can submit. The submitter receives a status URL (<code>/invite/status/&lt;token&gt;/</code>) so they can check progress without an account.</li>
+                            <li><strong>Programmatic intake</strong> at <code>/api/v1/intake/invitation/</code> (bearer-token auth) for forwarding from another website or a legacy system.</li>
+                        </ol>
+                        <p class="mb-0">Either way, the new invitation lands in the <strong>Received</strong> status, and an <code>invitation_received</code> notification fires to schedulers and administrators in your agency.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q3: Status workflow -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading3">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse3"
+                            aria-expanded="false" aria-controls="faqCollapse3">
+                        <i class="bi bi-diagram-3 me-2 text-primary"></i>
+                        What do the invitation statuses mean?
+                    </button>
+                </h2>
+                <div id="faqCollapse3" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3"><span class="badge bg-secondary">Received</span></dt>
+                            <dd class="col-sm-9">Arrived from intake. Untouched by staff.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-primary">Under Review</span></dt>
+                            <dd class="col-sm-9">Staff has started triage.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-warning text-dark">Needs Info</span></dt>
+                            <dd class="col-sm-9">Waiting on the submitter to clarify date, format, or other details.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-success">Accepted</span></dt>
+                            <dd class="col-sm-9">Confirmed — the principal will attend.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-warning text-dark">Tentative</span></dt>
+                            <dd class="col-sm-9">Soft yes pending a final calendar slot.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-info">Delegated</span></dt>
+                            <dd class="col-sm-9">A deputy will attend in the principal's place.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-purple">Scheduled</span></dt>
+                            <dd class="col-sm-9">Pushed to the external calendar.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-dark">Completed</span></dt>
+                            <dd class="col-sm-9">Event has occurred and been wrapped.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-danger">Declined</span></dt>
+                            <dd class="col-sm-9">Not attending. Comment required.</dd>
+
+                            <dt class="col-sm-3"><span class="badge bg-secondary">Cancelled</span></dt>
+                            <dd class="col-sm-9">Event was cancelled before it occurred.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q4: Roles -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading4">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse4"
+                            aria-expanded="false" aria-controls="faqCollapse4">
+                        <i class="bi bi-shield-lock me-2 text-primary"></i>
+                        What can each Yeoman role do?
+                    </button>
+                </h2>
+                <div id="faqCollapse4" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Administrator</dt>
+                            <dd class="col-sm-9">Full access. Triage, decide, delegate, schedule, complete, cancel, reopen. Manages the principal profile and reference addresses.</dd>
+                            <dt class="col-sm-3">Scheduler</dt>
+                            <dd class="col-sm-9">Operates the queue. Starts review, requests info, pushes to calendar, completes, and cancels. Cannot accept / decline / delegate — those are Administrator decisions.</dd>
+                            <dt class="col-sm-3">Delegate</dt>
+                            <dd class="col-sm-9">Reads invitations delegated to them. Receives delegation notifications.</dd>
+                            <dt class="col-sm-3">Viewer</dt>
+                            <dd class="col-sm-9">Read-only across the dashboard, list, and calendar.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q5: Assigned vs principal vs delegated -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading5">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse5"
+                            aria-expanded="false" aria-controls="faqCollapse5">
+                        <i class="bi bi-people me-2 text-primary"></i>
+                        What's the difference between assigned, principal, and delegated?
+                    </button>
+                </h2>
+                <div id="faqCollapse5" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <ul class="mb-0">
+                            <li><strong>Assigned (coordinator)</strong> — the staff member managing logistics and submitter communication. Set by the <strong>Claim</strong> action.</li>
+                            <li><strong>Principal</strong> — the person speaking. Typically the Commissioner or agency head whose time is being scheduled.</li>
+                            <li><strong>Delegated</strong> — when the principal can't attend, an Administrator delegates to a deputy. The chain is captured in the delegation history.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q6: Calendar push -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading6">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse6"
+                            aria-expanded="false" aria-controls="faqCollapse6">
+                        <i class="bi bi-calendar2-week me-2 text-primary"></i>
+                        How does pushing to the calendar work?
+                    </button>
+                </h2>
+                <div id="faqCollapse6" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading6" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>From an Accepted, Tentative, or Delegated invitation, click <strong>Push to Calendar</strong>. Yeoman calls <code>keel.calendar.push_event</code> to create the event in the configured calendar (Outlook / Exchange / Google), stores the external event ID on the invitation (<code>calendar_event_id</code>), stamps the push timestamp, and moves the invitation to the <strong>Scheduled</strong> status.</p>
+                        <p class="mb-0">Cancelling a Scheduled invitation calls back to <code>cancel_event</code> so the external event is removed.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q7: iCal / submitter calendar -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading7">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse7"
+                            aria-expanded="false" aria-controls="faqCollapse7">
+                        <i class="bi bi-file-earmark-arrow-down me-2 text-primary"></i>
+                        Can I send the submitter (or someone outside the suite) a calendar file?
+                    </button>
+                </h2>
+                <div id="faqCollapse7" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading7" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>Yes. Two paths:</p>
+                        <ul>
+                            <li><strong>Download an .ics file</strong> at <code>/invitations/&lt;uuid&gt;/ical/</code> and forward it manually.</li>
+                            <li><strong>Send a calendar invite</strong> at <code>/invitations/&lt;uuid&gt;/send-calendar/</code>. Yeoman emails the invite (via <code>keel.calendar</code>) to one or more recipients and records who received it on the invitation for audit.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q8: Map / geocoding -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading8">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse8"
+                            aria-expanded="false" aria-controls="faqCollapse8">
+                        <i class="bi bi-geo-alt me-2 text-primary"></i>
+                        How do invitations end up on the map?
+                    </button>
+                </h2>
+                <div id="faqCollapse8" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading8" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>When an invitation is saved with a venue address but no coordinates, Yeoman geocodes the address automatically. The resulting latitude/longitude let the invitation appear as a marker on <code>/map/</code>, colored by status.</p>
+                        <p class="mb-0">If geocoding fails, the invitation is still created — it just doesn't appear on the map until the address is corrected.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q9: Beacon -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading9">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse9"
+                            aria-expanded="false" aria-controls="faqCollapse9">
+                        <i class="bi bi-person-plus me-2 text-primary"></i>
+                        What does "Add to Beacon" do?
+                    </button>
+                </h2>
+                <div id="faqCollapse9" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading9" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>If the suite includes Beacon (the CRM), Administrators see an <strong>Add to Beacon</strong> control on each invitation. Clicking it pushes the submitter to Beacon as a contact, records the resulting Beacon contact ID on the invitation, and drops a provenance entry on the Beacon contact pointing back to this Yeoman invitation.</p>
+                        <p class="mb-0">If Beacon isn't configured, the button is hidden — there are no silent no-ops. The control reappears once Beacon is reachable.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q10: Helm inbox -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading10">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse10"
+                            aria-expanded="false" aria-controls="faqCollapse10">
+                        <i class="bi bi-inbox me-2 text-primary"></i>
+                        How do my Yeoman invitations show up in Helm?
+                    </button>
+                </h2>
+                <div id="faqCollapse10" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading10" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>Helm's <strong>Today → Awaiting Me</strong> column queries each peer product through a per-user inbox endpoint. Yeoman exposes <code>/api/v1/helm-feed/inbox/</code> and returns invitations where you are the gating dependency:</p>
+                        <ul class="mb-0">
+                            <li><strong>Coordinate</strong> — open invitations assigned to you.</li>
+                            <li><strong>Speak</strong> — open invitations where you are the principal.</li>
+                            <li><strong>Cover for</strong> — open invitations delegated to you.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q11: Notifications -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading11">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse11"
+                            aria-expanded="false" aria-controls="faqCollapse11">
+                        <i class="bi bi-bell me-2 text-primary"></i>
+                        How do I control which notifications I receive?
+                    </button>
+                </h2>
+                <div id="faqCollapse11" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading11" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>Open your sidebar profile dropdown and click <strong>Notification Preferences</strong> (or visit <a href="/notifications/preferences/">/notifications/preferences/</a>).</p>
+                        <p class="mb-0">For each event type (<code>invitation_received</code>, <code>invitation_assigned</code>, <code>invitation_delegated</code>, etc.), toggle the in-app and email channels independently.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q12: Principal settings -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading12">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse12"
+                            aria-expanded="false" aria-controls="faqCollapse12">
+                        <i class="bi bi-person-badge me-2 text-primary"></i>
+                        Where do I configure the principal and reference addresses?
+                    </button>
+                </h2>
+                <div id="faqCollapse12" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading12" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>Administrators visit <strong>Settings → Principal</strong> (<code>/settings/principal/</code>) to set the display name, title, contact info, and notes for the principal. Reference addresses (Home, Office, Capitol, etc.) are managed on the same page; one can be marked the default. Yeoman uses these to compute driving distance from incoming invitation venues.</p>
+                        <p class="mb-0">There is one principal profile per agency.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q13: Submitter status -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading13">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse13"
+                            aria-expanded="false" aria-controls="faqCollapse13">
+                        <i class="bi bi-eye me-2 text-primary"></i>
+                        What does the submitter see after they submit?
+                    </button>
+                </h2>
+                <div id="faqCollapse13" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading13" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <p>The intake form returns a status URL of the form <code>/invite/status/&lt;status_token&gt;/</code>. Anyone holding that URL can see the current status, the assigned coordinator's name (when available), and the event date once confirmed. They cannot see internal notes, attachments other than ones they uploaded themselves, or any information about other invitations.</p>
+                        <p class="mb-0">The token is per-invitation, so sharing it doesn't expose the rest of the queue.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q14: Support -->
+            <div class="accordion-item border-0 shadow-sm mb-3 rounded">
+                <h2 class="accordion-header" id="faqHeading14">
+                    <button class="accordion-button collapsed fw-semibold" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#faqCollapse14"
+                            aria-expanded="false" aria-controls="faqCollapse14">
+                        <i class="bi bi-headset me-2 text-primary"></i>
+                        How do I get help?
+                    </button>
+                </h2>
+                <div id="faqCollapse14" class="accordion-collapse collapse"
+                     aria-labelledby="faqHeading14" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body lh-lg">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold"><i class="bi bi-envelope me-2"></i>Email Support</h6>
+                                        <p class="small mb-0">
+                                            <a href="mailto:info@docklabs.ai">info@docklabs.ai</a><br>
+                                            Response within 1–2 business days.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold"><i class="bi bi-chat-dots me-2"></i>Feedback Widget</h6>
+                                        <p class="small mb-0">Look in the bottom-right corner of every page. Routes to the shared support queue.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-3 mb-0">For questions specific to a peer product (Helm, Beacon, etc.), open the help link inside that product.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-question-circle display-6 text-primary d-block mb-3"></i>
+                <h5 class="fw-bold">Still have questions?</h5>
+                <p class="text-muted mb-3">If you couldn't find the answer you were looking for, please don't hesitate to contact us.</p>
+                <a href="mailto:info@docklabs.ai" class="btn btn-primary">
+                    <i class="bi bi-envelope me-2"></i> Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
