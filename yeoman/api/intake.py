@@ -152,15 +152,18 @@ def invitation_intake(request):
     invitation.save()
 
     # Notify admins/schedulers (same as PublicInviteView). Fall back to
-    # is_staff users if no user holds a yeoman_admin / yeoman_scheduler
-    # role — a successful intake that produces zero notifications is the
-    # worst possible outcome (the work item exists but no one knows).
+    # is_staff users if no user holds a yeoman_admin / agency_admin /
+    # yeoman_scheduler role — a successful intake that produces zero
+    # notifications is the worst possible outcome (the work item exists
+    # but no one knows).
     User = get_user_model()
     role_recipients = list(
         User.objects.filter(
             is_active=True,
             product_access__product='yeoman',
-            product_access__role__in=['yeoman_admin', 'yeoman_scheduler'],
+            product_access__role__in=[
+                'yeoman_admin', 'agency_admin', 'yeoman_scheduler',
+            ],
             product_access__is_active=True,
         ).distinct()
     )

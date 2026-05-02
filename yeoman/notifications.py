@@ -12,7 +12,7 @@ YEOMAN_NOTIFICATION_TYPES = [
         description='A new invitation has been submitted via the public form.',
         category='Invitations',
         default_channels=['in_app', 'email'],
-        default_roles=['yeoman_admin', 'yeoman_scheduler'],
+        default_roles=['yeoman_admin', 'agency_admin', 'yeoman_scheduler'],
         email_subject='New invitation: {title}',
     ),
     NotificationType(
