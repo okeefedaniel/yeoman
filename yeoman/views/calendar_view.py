@@ -18,11 +18,18 @@ class CalendarView(LoginRequiredMixin, TemplateView):
 
 @login_required
 def calendar_events_json(request):
-    """Return invitation events as JSON for FullCalendar."""
+    """Return invitation events as JSON for FullCalendar.
+
+    Scoped to ``for_user`` so cross-agency users can't enumerate the
+    principal's full schedule (incl. submitter PII and venue lat/lng)
+    via this endpoint. (CSO 2026-05-03)
+    """
     start = request.GET.get('start', '')
     end = request.GET.get('end', '')
 
-    qs = Invitation.objects.exclude(status__in=('declined', 'cancelled'))
+    qs = Invitation.objects.for_user(request.user).exclude(
+        status__in=('declined', 'cancelled'),
+    )
     if start:
         qs = qs.filter(event_date__gte=start[:10])
     if end:

@@ -49,8 +49,11 @@ def push_invitation(invitation):
         # Legacy field kept for back-compat with older Beacon deployments
         'source': 'yeoman',
         'notes': (
+            # event_date is nullable on the model — guard against None
+            # so a Beacon push for a "date TBD" invitation doesn't 500
+            # with AttributeError. (CSO 2026-05-03)
             f'Submitted invitation for "{invitation.event_name}" '
-            f'on {invitation.event_date.isoformat()}.'
+            f'on {invitation.event_date.isoformat() if invitation.event_date else "TBD"}.'
         ),
     }
     response = requests.post(

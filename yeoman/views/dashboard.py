@@ -16,10 +16,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        qs = Invitation.objects.all()
+        user = self.request.user
+        # Scope to caller's agency. Without this, the "Total /
+        # Needs Attention / Active" counts on the dashboard leak the
+        # size of other agencies' workloads to any logged-in user.
+        # (CSO 2026-05-03)
+        qs = Invitation.objects.for_user(user)
         today = timezone.now().date()
         next_week = today + timedelta(days=7)
-        user = self.request.user
 
         # Status counts
         counts = qs.values('status').annotate(count=Count('id'))
