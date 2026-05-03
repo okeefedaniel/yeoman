@@ -110,10 +110,17 @@
 {% endblock %}
 
 {% block extra_js %}
+{# json_script emits a properly-escaped JSON payload inside a hidden #}
+{# <script type="application/json"> tag — safer than `|safe`, which #}
+{# rendered the raw Python repr (single-quoted, not valid JSON, and a #}
+{# direct XSS surface if any embedded value ever carried a `</script>`). #}
+{# (CSO 2026-05-03) #}
+{{ monthly_volume|json_script:"yeoman-monthly-volume" }}
+{{ by_status|json_script:"yeoman-by-status" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 // Monthly Volume Chart
-var monthlyData = {{ monthly_volume|safe }};
+var monthlyData = JSON.parse(document.getElementById('yeoman-monthly-volume').textContent);
 new Chart(document.getElementById('monthlyChart'), {
   type: 'bar',
   data: {
@@ -133,7 +140,7 @@ new Chart(document.getElementById('monthlyChart'), {
 });
 
 // Status Chart
-var statusData = {{ by_status|safe }};
+var statusData = JSON.parse(document.getElementById('yeoman-by-status').textContent);
 var statusColors = {
   'received': '#6c757d', 'under_review': '#0d6efd', 'needs_info': '#ffc107',
   'accepted': '#198754', 'declined': '#dc3545', 'delegated': '#20c997',

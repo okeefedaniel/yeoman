@@ -16,10 +16,17 @@ class ReportsDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        qs = Invitation.objects.all()
+        # Scope to caller's agency so cross-agency users don't see
+        # aggregate volumes / submitter orgs they don't own. (CSO 2026-05-03)
+        qs = Invitation.objects.for_user(self.request.user)
 
-        # Date range filter
-        days = int(self.request.GET.get('days', 90))
+        # Date range filter — clamp to a sane range so a user can't
+        # blow up the query planner with `days=99999999`.
+        try:
+            days = int(self.request.GET.get('days', 90))
+        except (TypeError, ValueError):
+            days = 90
+        days = max(1, min(days, 3650))
         cutoff = timezone.now() - timedelta(days=days)
         qs_period = qs.filter(created_at__gte=cutoff)
         ctx['days'] = days
@@ -83,7 +90,12 @@ class InvitationExportView(LoginRequiredMixin, View):
     """Export filtered invitations as CSV."""
 
     def get(self, request):
-        qs = Invitation.objects.select_related('assigned_to', 'delegated_to', 'agency')
+        # CSV export must respect the same agency scoping as the list
+        # view — without ``for_user`` any logged-in user could dump
+        # every invitation in the system as CSV. (CSO 2026-05-03)
+        qs = Invitation.objects.for_user(request.user).select_related(
+            'assigned_to', 'delegated_to', 'agency',
+        )
 
         # Apply same filters as list view
         status = request.GET.get('status')

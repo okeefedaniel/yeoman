@@ -19,9 +19,15 @@ class MapView(LoginRequiredMixin, TemplateView):
 
 @login_required
 def map_markers_json(request):
-    """Return geocoded invitations as GeoJSON-like markers."""
+    """Return geocoded invitations as GeoJSON-like markers.
+
+    Scoped to ``for_user`` so cross-agency users can't read venue
+    coordinates and event metadata for invitations outside their
+    agency. (CSO 2026-05-03)
+    """
     qs = (
         Invitation.objects
+        .for_user(request.user)
         .exclude(latitude__isnull=True)
         .exclude(longitude__isnull=True)
         .exclude(status__in=('declined', 'cancelled'))
