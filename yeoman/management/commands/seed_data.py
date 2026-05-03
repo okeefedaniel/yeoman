@@ -20,6 +20,7 @@ ROLE_ADMIN = 'yeoman_admin'
 ROLE_SCHEDULER = 'yeoman_scheduler'
 ROLE_VIEWER = 'yeoman_viewer'
 ROLE_DELEGATE = 'yeoman_delegate'
+ROLE_PRINCIPAL = 'yeoman_principal'
 
 
 class Command(BaseCommand):
@@ -54,6 +55,7 @@ class Command(BaseCommand):
             ('jscheduler', 'Jane', 'Scheduler', ROLE_SCHEDULER),
             ('bviewer', 'Bob', 'Viewer', ROLE_VIEWER),
             ('ddelegate', 'Diana', 'Delegate', ROLE_DELEGATE),
+            ('pgreene', 'Pat', 'Greene', ROLE_PRINCIPAL),
         ]
         for username, first, last, role in user_defs:
             user, created = User.objects.get_or_create(
@@ -67,7 +69,10 @@ class Command(BaseCommand):
                 },
             )
             if created:
-                user.set_password('yeoman2026')
+                if role == ROLE_PRINCIPAL:
+                    user.set_unusable_password()
+                else:
+                    user.set_password('yeoman2026')
                 user.save()
 
             # Ensure ProductAccess exists for this user

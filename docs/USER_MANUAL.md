@@ -64,6 +64,7 @@ profile.
 |---|---|
 | **Administrator** (`yeoman_admin`) | Full access. Triage, decide, delegate, schedule, complete, cancel, reopen. Manage principal profile and reference addresses. |
 | **Scheduler** (`yeoman_scheduler`) | Triage and operate the queue. Start review, request info, push to calendar, complete, and cancel. Cannot accept / decline / delegate (those are Administrator decisions). |
+| **Principal** (`yeoman_principal`) | The person whose time is being scheduled. Once a Scheduler has triaged a request to **Under Review** or **Tentative**, the Principal can personally accept, decline, or mark it tentative. No access to triage, delegation, or scheduling. |
 | **Delegate** (`yeoman_delegate`) | Read invitations delegated to you. Receive delegation notifications. |
 | **Viewer** (`yeoman_viewer`) | Read-only across the dashboard, list, and calendar. |
 

@@ -18,13 +18,13 @@ INVITATION_WORKFLOW = WorkflowEngine(
         Transition('needs_info', 'under_review', roles=['yeoman_scheduler', 'yeoman_admin'], label='Info Received'),
 
         # Decision
-        Transition('under_review', 'accepted', roles=['yeoman_admin'], label='Accept'),
-        Transition('under_review', 'tentative', roles=['yeoman_admin'], label='Mark Tentative'),
-        Transition('under_review', 'declined', roles=['yeoman_admin'], label='Decline', require_comment=True),
+        Transition('under_review', 'accepted', roles=['yeoman_admin', 'yeoman_principal'], label='Accept'),
+        Transition('under_review', 'tentative', roles=['yeoman_admin', 'yeoman_principal'], label='Mark Tentative'),
+        Transition('under_review', 'declined', roles=['yeoman_admin', 'yeoman_principal'], label='Decline', require_comment=True),
 
         # Tentative → confirm or decline
-        Transition('tentative', 'accepted', roles=['yeoman_admin'], label='Confirm'),
-        Transition('tentative', 'declined', roles=['yeoman_admin'], label='Decline', require_comment=True),
+        Transition('tentative', 'accepted', roles=['yeoman_admin', 'yeoman_principal'], label='Confirm'),
+        Transition('tentative', 'declined', roles=['yeoman_admin', 'yeoman_principal'], label='Decline', require_comment=True),
 
         # Delegation (from accepted or tentative)
         Transition('accepted', 'delegated', roles=['yeoman_admin'], label='Delegate'),
