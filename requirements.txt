@@ -26,3 +26,4 @@ Pillow>=10.4,<12.0
 
 # DockLabs Shared Platform
 keel @ git+https://github.com/okeefedaniel/keel.git@v0.24.8
+twilio>=9.0  # SMS notifications via keel.notifications.channels.sms
